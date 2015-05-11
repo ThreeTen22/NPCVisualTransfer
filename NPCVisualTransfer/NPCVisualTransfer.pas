@@ -6,20 +6,23 @@
 unit NPCVisualTransfer;
 uses mteFunctions;
 const
-  MinElementsToModify = 'RNAM,"Head Parts",HCLF,WNAM,NAM6,NAM7,QNAM,"Tint Layers",OBND,NAM9,NAMA,FTST,ANAM';
-  bethESMs = 'skyrim.esm'#13'dawnguard.esm'#13'dragonborn.esm'#13'hearthfires.esm';
-  bethBSAs = 'Skyrim -'#13'Dawnguard.bsa'#13'Dragonborn.bsa'#13'Hearthfires.bsa';
+  MinElementsToModify = 'RNAM,WNAM,ANAM,"Head Parts",HCLF,NAM6,NAM7,QNAM,"Tint Layers",OBND,NAM9,NAMA,FTST,ANAM,DOFT';
+  copyGRUPS = 'TXTS,';
+  bethESMs = 'skyrim.esm'#13'dawnguard.esm'#13'dragonborn.esm'#13'hearthfires.esm'#13'update.esm';
+  bethBSAs = 'skyrim - animations.bsa'#13'skyrim - meshes.bsa'#13'Skyrim - textures.bsa'#13'skyrim - misc.bsa'#13'dawnguard.bsa'#13'dragonborn.bsa'#13'hearthfires.bsa'#13'update.bsa';
   lMeshPath = 'meshes\actors\character\facegendata\facegeom\';
   lTexPath = 'textures\actors\character\facegendata\facetint\';
-  moFolderName = 'VNPC_FaceGeomData';
+  moDataFolder = 'VNPC_Data';
   ScriptName = 'Visual Transfer Tool';
 var 
   sourceNPCIDs, destNPCIDs: TStringList;
-  SourceNPC, DestNPC, PatchFile: IInterface;
-  slResList,slElementToXFer,slCurrentNPCs: TStringList;
+  SourceNPC, DestNPC, PatchFile, DestFL: IInterface;
+  slResList,slElementToXFer,slCurrentNPCs, slAssetPaths: TStringList;
   slAssets: TwbFastStringList;
-  bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime: Boolean;
-  xferPath, sSourceNPCName, sDestNPCName: String;
+  bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: Boolean;
+  //NPC Specific Bools
+  bCustomRace, bHasWNAM, bHasUDOFT, bHasUSOFT: boolean;
+  moPath,xferPath, sSourceNPCName, sDestNPCName: String;
   slContainers: TwbFastStringList;
 
 
@@ -33,6 +36,7 @@ begin
   sHexID := CopyFromTo(input, Length(input)-7, Length(input));
   AddMessage(sHexID);
   iiMasterRecord := RecordByHex(sHexID);
+  if not Assigned(iiMasterRecord) then exit;
   if OverrideCount(iiMasterRecord) > 0 then begin
     Result := WinningOverride(MasterOrSelf(iiMasterRecord));
   end else
@@ -71,11 +75,7 @@ begin
   //Opposite Animation Index: 20 
   ChangeFlag(20,sSourceFlags,sDestFlags);
   seev(DestNPC,'ACBS\Flags', sDestFlags);
-  //frm := TForm.Create(nil);
-  //frm.Caption := 'Select '+ grup;
-  //frm.Width := 556;
-  //frm.Height := 480;
-  //frm.Position := poScreenCenter;
+
 
 end;
 
@@ -104,15 +104,17 @@ procedure RemoveNPC(iiNPC: IInterface);
 var
   dHex, dFileName: string;
 begin
-  dHex := '00'+ CopyFromTo(HexFormID(iiNPC),3,8);
-  dFileName := GetFileName(GetFile(MasterOrSelf(iiNPC)));
-  DeleteFile(xferPath+moFolderName+'\'+lMeshPath+dFileName+'\'+dHex+'.nif');
-  DeleteFile(xferPath+moFolderName+'\'+lTexPath+dFileName+'\'+dHex+'.dds');
-  AddMessage('-Removing NPC');
-  Remove(iiNPC);
+  if Assigned(iiNPC) then begin
+    dHex := '00'+ CopyFromTo(HexFormID(iiNPC),3,8);
+    dFileName := GetFileName(GetFile(MasterOrSelf(iiNPC)));
+    DeleteFile(xferPath+moDataFolder+'\'+lMeshPath+dFileName+'\'+dHex+'.nif');
+    DeleteFile(xferPath+moDataFolder+'\'+lTexPath+dFileName+'\'+dHex+'.dds');
+    AddMessage('-Removing NPC');
+    Remove(iiNPC);
+  end else AddMessage('-Nothing To Remove');
 end;
 
-procedure ActorSelect(grup,prompt,prompt2: string; tsSourceList,tsDestList: TStringList; var iiSourceNPC:IInterface; var iiDestNPC: IInterface);
+function ActorSelect(grup,prompt,prompt2: string; tsSourceList,tsDestList: TStringList; var iiSourceNPC:IInterface; var iiDestNPC: IInterface): integer;
 var
   frm: TForm;
   lbl, lbl2: TLabel;
@@ -123,6 +125,7 @@ var
   i,modals: integer;
   s, input1,input2: string;
 begin
+  Debug('Inside ActorSelect');
   frm := TForm.Create(nil);
   GrabActorsFromFile(PatchFile);
   try
@@ -225,10 +228,9 @@ begin
       if (input1 = ' ') or (input2 = ' ') then Exit;
         iiSourceNPC := GrabWinningRecordFromSelection(input1);
         iiDestNPC := GrabWinningRecordFromSelection(input2);
-      if Equals(GetFile(iiDestNPC), PatchFile) then begin
-        Remove(iiDestNPC);
+      if Equals(GetFile(iiDestNPC), PatchFile) and (OverrideCount(iiDestNPC) > 0) then begin
+        RemoveNPC(iiDestNPC);
         iiDestNPC := GrabWinningRecordFromSelection(input2);
-        AddMessage('Removing NPC');
       end;
       sSourceNPCName := geev(iiSourceNPC, 'FULL');
       if sSourceNPCName = '' then
@@ -237,10 +239,7 @@ begin
       sDestNPCName := geev(iiDestNPC, 'FULL');
       if sDestNPCName = '' then
         sDestNPCName := geev(iiDestNPC, 'EDID');
-      //DEBUG
-        //iiSourceNPC := RecordByHex('02001D90');
-        //iiDestNPC := RecordByHex('00013255');
-      //ENDDEBUG
+
       AddRequiredElementMasters(iiDestNPC, PatchFile, false);
       AddRequiredElementMasters(iiSourceNPC, PatchFile, false);
       iiDestNPC := wbCopyElementToFile(iiDestNPC,PatchFile,false,true);
@@ -260,11 +259,12 @@ begin
   end;
 end;
 
-procedure MoveRenameFaceGeom(sHex,sFile,dHex,dFile: String);
+procedure MoveRenameFaceGen(sHex,sFile,dHex,dFile: String);
 var
   tXferPath: String;
 begin
-  tXferPath := xferPath+moFolderName+'\';
+  Debug('Inside MoveRenameFaceGen');
+  tXferPath := xferPath+moDataFolder+'\';
   ForceDirectories(tXferPath+lMeshPath+dFile+'\');
   ForceDirectories(tXferPath+lTexPath+dFile+'\');
 
@@ -289,8 +289,8 @@ begin
   destFileName := GetFileName(tempFile);
   tempFile := MasterOrSelf(SourceNPC);
   sourceFilename := GetFileName(tempFile);
-  ExtractFaceGeom(sourceNPC);
-  MoveRenameFaceGeom(sourceLocalHexID, sourceFilename, destLocalHexID, destFileName);
+  ExtractFaceGen(sourceNPC);
+  MoveRenameFaceGen(sourceLocalHexID, sourceFilename, destLocalHexID, destFileName);
 end;
 
 
@@ -300,6 +300,7 @@ var
   path: string;
   iiDest, iiSource, elementToAdd: IInterface;
 begin
+  Debug('Inside TransferElements');
   iiDest := DestNPC;
   iiSource := SourceNPC;
   for i := 0 to Pred(slElementToXFer.Count) do begin
@@ -309,6 +310,7 @@ begin
   for i := 0 to Pred(slElementToXFer.Count) do begin
     CopySubElement(iiSource, iiDest,slElementToXFer[i]);
   end;
+  
   AdditionalOptions();
 end;
 
@@ -316,6 +318,7 @@ procedure RemoveSubElement(iiRecord: IInterface; elementName: String);
 var
   elementToClean: IInterface;
 begin
+  Debug('Inside RemoveSubElement');
   elementToClean := ElementByIP(iiRecord, elementName);
   if Assigned(elementToClean) then begin
     AddMessage('Removed : '+elementName);
@@ -327,6 +330,7 @@ procedure CopySubElement(iiS,iiD: IInterface; elementName: String);
 var
   elementToCopy: IInterface;
 begin
+  Debug('Inside CopySubElement');
   elementToCopy := ElementByIP(iiS, elementName);
   if Assigned(elementToCopy) then begin
     if not CheckForErrors(0,elementToCopy) then begin
@@ -336,19 +340,21 @@ begin
         wbCopyElementToRecord(elementToCopy,iiD,false,true);
       except
         on E:Exception do AddMessage('Could Not Copy Record!');
+      finally
       end;
     end;
   end;
 end;
 
-function ExtractFaceGeom(iiNpc: IInterface): boolean;
+function ExtractFaceGen(iiNpc: IInterface): boolean;
 var
   i: Integer;
   bFound: Boolean;
-  oFName, mFName, ovShortName, mstrShortName, bsaToCheck, hexID: String;
+  oFName, mFName, ovShortName, mstrShortName, bsaToCheck, hexID, test: String;
   nifPath, nifFile, ddsPath,ddsFile: String;
   iiNPCMaster: IInterface;
 begin
+  Debug('Inside ExtractFaceGeom');
   bFound := false;
   oFName := GetFileName(GetFile(iiNPC));
   ovShortName := CopyFromTo(oFName, 1,Length(oFName)-4)+'.bsa';
@@ -361,39 +367,14 @@ begin
   ddsPath := lTexPath+mFName+'\';
   ddsFile := hexID+'.dds';
 
-  AddMessage('ExtractFaceGeom: hexID: '+ hexID);
+  AddMessage('ExtractFaceGen To Temp:'+ TempPath);
   
-  TryToCopy(nifPath, nifFile);
-  TryToCopy(ddsPath, ddsFile);
+  test := TryToCopy(nifPath,nifFile);
+  AddMessage(test);
+  test := TryToCopy(ddsPath,ddsFile);
+  AddMessage(test);
 
-  //ForceDirectories(TempPath+lMeshPath+mFName+'\');
-  //ForceDirectories(TempPath+lTexPath+mFName+'\');
-  //First check if it is in a bsa and if it is which bsa could it be - if it is in a bsa then extract it - the override one takes precidence - otherwise grab it from data
-  //for i := Pred(slContainers.Count) downto 0 do begin
-  //  bsaToCheck := SimpleName(slContainers[i]);
-  //  if Pos(bsaToCheck,bethBSAs) > 0 then continue;
-  //    try
-  //      ResourceCopy(DataPath+bsaToCheck,nifString,TempPath);
-  //    except
-  //      on E: Exception do begin
-  //      AddMessage('Mesh Not In ' + bsaToCheck);
-  //      end;
-  //    finally
-  //    end;
-  //    try
-  //      ResourceCopy(DataPath+bsaToCheck,ddsString ,TempPath);
-  //    except
-  //      on E: Exception do begin
-  //       AddMessage('DDS Not In ' + bsaToCheck);
-  //      end;
-  //    finally
-  //    end;
-  //end;
-  //wCopyFile(DataPath+nifString,TempPath+nifString, false);
-  //wCopyFile(DataPath+ddsString,TempPath+ddsString, false);
-  //wCopyFile(DataPath+nifString,TempPath+nifString, false);
-  //wCopyFile(DataPath+ddsString,TempPath+ddsString, false);
-  //Result := bFound;
+ 
 end;
 
 function TryToCopy(filePath, fileName: String): String;
@@ -402,24 +383,25 @@ var
   slRes: TStringList;
   fileString: String;
 begin
+  Debug('Inside TryToCopy');
   slRes := TStringList.Create;
-  
   try
-  ResourceCount(filePath+fileName, slRes);
-
-  for i := Pred(slRes.Count) downto 0 do
-    if slContainers.IndexOf(slRes[i]) <> -1 then begin
-      Result := slRes[i];
-      Break;
+    ResourceCount(filePath+fileName, slRes);
+    ForceDirectories(TempPath+filePath);
+    for i := Pred(slRes.Count) downto 0 do begin
+      if slContainers.IndexOf(slRes[i]) <> -1 then begin
+        Result := slRes[i];  
+        AddMessage(Result);
+        Break;
+      end;
     end;
-  if (Result <> '') then ResourceCopy(Result, filePath+fileName, TempPath);
 
-  ForceDirectories(TempPath+filePath+fileName);
-  wCopyFile(DataPath+filePath+fileNam,TempPath+filePath+fileNam, false);
-  wCopyFile(DataPath+filePath+fileNam,TempPath+filePath+fileNam, false);
+    if (Result <> '') then ResourceCopy(Result, filePath+fileName, TempPath);
   except
-    on E:Exception do
+    on E:Exception do begin
     slRes.Free;
+    AddMessage('Could Not Copy!');
+    end;
   finally
     slRes.Free;
   end; 
@@ -458,26 +440,7 @@ begin
       end;
     end;
   end;
-end;
-
-procedure FreeGlobalLists();
-begin
-  if Assigned(sourceNPCIDs) then
-  sourceNPCIDs.Free;
-  if Assigned(destNPCIDs) then
-  destNPCIDs.Free;
-  if Assigned(slResList) then
-  slResList.Free;
-  if Assigned(slContainers) then
-  slContainers.Free;
-  if Assigned(slElementToXFer) then
-  slElementToXFer.Free;
-  if Assigned(slCurrentNPCs) then
-  slCurrentNPCs.Free;
-end;
-
-
-  
+end; 
 
 // Moved over from mtefunction.pas with a fix due to a small error from a released version. 
 function RecordByHex(id: string): IInterface;
@@ -510,7 +473,7 @@ end;
 procedure GatherIniInfo();
 var
   ini: TMemIniFile;
-  cFilePath, moPath, fileNameString: string;
+  cFilePath, fileNameString: string;
   moButton, moButton2, filenameOK: integer;
 begin
   xferPath := '';
@@ -523,7 +486,7 @@ begin
       moButton := MessageDlg('Welcome To NPC Visual Transfer:'#13'Since this is the first time you are runnning this script lets do some setup:'#13#13'Do You Use Mod Organizer?',mtConfirmation, [mbYes, mbNo], 0);
       if moButton = mrYes then begin
         bUsingMO := true;
-        moPath := SelectDirectory('Please Select The Directory Where Mod Organizer Is Installed','',GamePath,'');
+        moPath := SelectDirectory('Select The Folder Containing ModOrganizer.exe','',DataPath,'');
         if (moPath = '') then begin 
           AddMessage('== User Has Cancelled Directory Selection: Quitting ==');
           bQuit := true;
@@ -549,14 +512,16 @@ begin
       end;
       if CheckFileName(fileNameString) then Exit;
       ini := TMemIniFile.Create(DataPath+'npcvt_Config.ini');
+      ini.WriteString('GENERAL', 'sMOPath', moPath);
       ini.WriteString('GENERAL', 'sXferPath', xferPath);
       ini.WriteString('GENERAL', 'sPatchFilename', fileNameString);
       ini.WriteBool('GENERAL', 'bUsingMO',bUsingMO);
       ini.UpdateFile;
-      MessageDlg('Configuration Complete.'#13'An ini File has been created in your Skyrim''s Data directory named npcvt_Config.ini.',mtConfirmation, [mbOk], 0);
+      MessageDlg('Configuration Complete.'#13'An ini File has been created in your overwrite folder named npcvt_Config.ini. Either keep it in the overwrite folder or move it into your NPCVisualTransfer modfolder.'#13'I have also made a new modfolder called '+moDataFolder+'. This is where the modified npc''s head texture/mesh will be saved.  Please do not modify, rename, or merge that folder in any way or this script will assume you are starting from scratch again!',mtInformation, [mbOk], 0);
     end 
     else begin
       ini := TMemIniFile.Create(DataPath+'npcvt_Config.ini');
+      moPath := ini.ReadString('GENERAL', 'sMOPath', '');
       xferPath := ini.ReadString('GENERAL','sXferPath',DataPath);
       bUsingMO := ini.ReadBool('GENERAL','bUsingMO', false);
       fileNameString := ini.ReadString('GENERAL','sPatchFilename','NONE');
@@ -577,14 +542,15 @@ begin
             ini.UpdateFile;
           end;
       end;
-      if DirectoryExists(DataPath+moFolderName+'\') then begin
-        AddMessage('Tes5Edit found '+moFolderName+ ' In The Data Directory, therefore the '+moFolderName+ ' modfolder is still active in Mod Organizer.  Please deselect that now and run this script again');
+      if IsDataFolderLoaded(moPath) then begin
+        MessageDlg('VNPC ERROR: '+moDataFolder+' is active in mod organizer.'#13#13'Please deactivate '+moDataFolder+' in mod organizer then run this script again.',mtError, [mbOk], 0);
+        AddMessage(moDataFolder+' is still active in mod organizer.  Please deactivate that folder and run the patch again');
         bQuit := true;
         Exit;
       end;
-      moButton := MessageDlg('NPC Visual Transfer Reminder: '#13#13'1: Is '+moFolderName+' below all other NPC-related ModFolders?'#13#13'2: Is '+GetFileName(PatchFile)+' below all NPC related mods in your loadorder?', mtConfirmation, [mbYes, mbNo], 0);
+      moButton := MessageDlg('NPC Visual Transfer Reminder: '#13#13'1: Is '+moDataFolder+' below all NPC-related ModFolders?'#13#13'2: Is '+GetFileName(PatchFile)+' below all NPC-related mods in your loadorder?', mtConfirmation, [mbYes, mbNo], 0);
       if not(moButton = mrYes) then begin
-        MessageDlg('Please check that now, otherwise some transfers will not work  Script will now exit.', mtError, [mbOk], 0);
+        MessageDlg('Please check that now, otherwise some transfers will not work. Script will now exit.', mtError, [mbOk], 0);
         AddMessage('-Did not setup correctly');
         bQuit := true;
         Exit;
@@ -595,11 +561,46 @@ begin
   end;
 end;
 
+function IsDataFolderLoaded(mPath: string): boolean;
+var
+  moINI: TMemIniFile;
+  selectedProfile: string;
+  profile: TStringList;
+  i: integer;
+begin
+  Result := false;
+  moINI := TMemIniFile.Create(mPath+'\ModOrganizer.ini');
+  selectedProfile := moINI.ReadString('General','selected_profile','');
+  moINI.free;
+  if (selectedProfile <> '') then begin
+    profile := TStringList.Create;
+    profile.LoadFromFile(moPath+'\profiles\'+selectedProfile+'\modlist.txt');
+    for i := 0 to Pred(profile.Count) do begin
+      if Pos(('+'+moDataFolder),profile[i]) > 0 then Result := true;
+    end;
+    profile.free;
+  end;
+end;
+
+function CreateTransferFormList(ovNPC: IInterface): IInterface;
+var 
+  fl, flo: IInterface;
+begin
+  Debug('Inside CreateTrasnferFormList');
+  fl := RecordByFormID(FileByIndex(0),101404,false);
+  flo := wbCopyElementToFile(fl,GetFile(ovNPC),true,true);
+  seev(flo, 'EDID', GetFileName(GetFile(ovNPC)));
+  Add(flo,'FormIDs',false);
+  Result := flo;
+end;
+
+
 
 function Initialize: integer;
 var 
   i: integer;
 begin
+  bDebug := true;
   bTrue := true;
   bFalse := false;
   bQuit := false;
@@ -621,48 +622,80 @@ begin
    Exit;
   end;
 end;
-//COPIED FROM MTEFUNCTIONS AND MODIFIED TO FIT NEEDS
+
+procedure CheckElement();
+begin
+  
+end;
 
 function Finalize: integer;
 begin
   try
     AddMessage('== Gathering NPC Information ==');
     AddMessage('-This will take a bit of time');
-    slContainers := TwbFastStringList.Create;
-    slCurrentNPCs := TStringList.Create;
-    ResourceContainerList(slContainers);
-    slElementToXFer := TStringList.Create;
-    slElementToXFer.DelimitedText := MinElementsToModify;
+    InitAllGlobals();
     GrabActors();
     if bQuit then begin
      Result := -1;
      Exit;
     end;
     while bQuit = false do begin
-      SourceNPC := nil;
-      DestNPC := nil;
+      ResetGlobals();
       ActorSelect('NPC','Select the standalone NPC whose visuals'#13'you wish to use','Select the NPC who will receive'#13'the new visuals', sourceNPCIDs,destNPCIDs, sourceNPC, destNPC);
       if bQuit then continue;
       if Assigned(SourceNPC) and Assigned(DestNPC) then begin
+          DestFL := CreateTransferFormList(DestNPC);
+          CheckElement(SourceNPC, 'Head Parts');
           TransferElements();
           TransferFaceGenData();
       end;
       if not(Assigned(SourceNPC)) and not(Assigned(DestNPC)) then AddMessage('Nothing Selected');
     end;
-  except
-    on E: Exception do FreeGlobalLists();
+  //except
+  //  on E: Exception do FreeGlobalLists();
   finally
-  
     FreeGlobalLists();
     CleanMasters(PatchFile);
     SortMasters(PatchFile);
-    if bFirstTime then
-    MessageDlg('As this is your first time running this program, I have gone ahead and created a new modfolder called '+moFolderName+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName,mtAlert, [mbOk], 0)
-    else
-    MessageDlg('All NPC FaceGeomData have been saved to the VNPC_FaceGeomData modfolder.  Please do not merge that modfolder and make sure to activate it after this closes',mtAlert, [mbOk], 0);
   end;
   //if not Assigned(SourceNPC) then Result := -1;
+  if bFirstTime then
+  MessageDlg('As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName,mtInformation, [mbOk], 0)
+  else
+  MessageDlg('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember to REACTIVATE that folder or the changes will not take effect!',mtInformation, [mbOk], 0);
 end;
+
+procedure InitAllGlobals();
+begin
+  slContainers := TwbFastStringList.Create;
+  slCurrentNPCs := TStringList.Create;
+  ResourceContainerList(slContainers);
+  slElementToXFer := TStringList.Create;
+  slElementToXFer.DelimitedText := MinElementsToModify;
+  slAssetPaths := TStringList.Create;
+  ResetGlobals();
+end;
+
+procedure ResetGlobals();
+begin
+  bCustomRace := false; bHasWNAM := false; bHasUDOFT := false; bHasUSOFT := false;
+  AddMessage(BoolToSrt(bCustomRace));
+  SourceNPC := nil;
+  DestNPC := nil;
+
+end;
+
+procedure FreeGlobalLists();
+begin
+  if Assigned(sourceNPCIDs) then sourceNPCIDs.Free;
+  if Assigned(destNPCIDs) then destNPCIDs.Free;
+  if Assigned(slResList) then slResList.Free;
+  if Assigned(slContainers) then slContainers.Free;
+  if Assigned(slElementToXFer) then slElementToXFer.Free;
+  if Assigned(slCurrentNPCs) then slCurrentNPCs.Free;
+  if Assigned(slAssetPaths) then slAssetPaths.Free;
+end;
+
 
 //Ported over from mtefunctions.pas and modified so it does not raise errors with 3.1
 function GetVersionStringLocal(v: integer): string;
@@ -748,6 +781,13 @@ begin
 
   for i := ElementCount(aElement) - 1 downto 0 do
     Result := CheckForErrors(aIndent + 1, ElementByIndex(aElement, i)) or Result;
+end;
+
+
+
+procedure Debug(s: string);
+begin
+  if bDebug then AddMessage('DEBUG:  '+s);
 end;
 
 end.
