@@ -17,7 +17,7 @@ const
 var 
   sourceNPCIDs, destNPCIDs: TStringList;
   SourceNPC, DestNPC, PatchFile, DestFL: IInterface;
-  slResList,slElementToXFer,slCurrentNPCs, slAssetPaths: TStringList;
+  slResList,slElementToXFer,slCurrentNPCs, slAssetPaths, slCurrPass, slNextPass: TStringList;
   slAssets: TwbFastStringList;
   bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: Boolean;
   //NPC Specific Bools
@@ -623,9 +623,35 @@ begin
   end;
 end;
 
-procedure CheckElement();
+function IsReferencing(elementToCheck, referenceToCheck: IInterface): boolean;
+var
+  refCount: integer;
+  indexRef: IInterface;
 begin
-  
+  Result := false;
+  refCount := ReferenceByCount(elementToCheck);
+  for i := 0 to Pred(refCount) do begin
+    indexRef := ReferenceByIndex(elementToCheck, i);
+    if Equals(indexRef, referenceToCheck) then begin
+      Result := true;
+      Exit;
+    end;
+  end;
+end;
+
+function CopyRefElementsByGRUP(GrupToCheck: string, referenceToCheck: IInterface);
+var 
+  i, iGrupSize: integer;
+  iGRUP, iIndexElement: IInterface;
+begin
+  iGRUP := GroupBySignature(GetFile(referenceToCheck),GrupToCheck);
+  iGrupSize := ElementCount(iGRUP);
+  for i := 0 to Pred(iGrupSize) do begin
+    iIndexElement := ElementByIndex(iGRUP, i);
+    if IsReferencing(iIndexElement, referenceToCheck) then begin
+      CopyAndAdd(iIndexElement,PatchFile,slNextPass);
+    end;
+  end;
 end;
 
 function Finalize: integer;
