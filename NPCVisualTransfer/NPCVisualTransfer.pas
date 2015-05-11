@@ -654,6 +654,11 @@ begin
   end;
 end;
 
+procedure CopyAndAdd(iElementToAdd, iDestFile: IInterface; var slNextPass: TStringList);
+begin
+
+end
+
 function Finalize: integer;
 begin
   try
@@ -677,8 +682,8 @@ begin
       end;
       if not(Assigned(SourceNPC)) and not(Assigned(DestNPC)) then AddMessage('Nothing Selected');
     end;
-  //except
-  //  on E: Exception do FreeGlobalLists();
+  except
+    on E: Exception do FreeGlobalLists();
   finally
     FreeGlobalLists();
     CleanMasters(PatchFile);
