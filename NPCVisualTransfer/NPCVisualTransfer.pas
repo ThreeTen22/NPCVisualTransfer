@@ -345,8 +345,8 @@ begin
       try
         AddRequiredElementMasters(elementToCopy,iiD, false);
         wbCopyElementToRecord(elementToCopy,iiD,false,true);
-      except
-        on E:Exception do AddMessage('Could Not Copy Record!');
+      //except
+      //  on E:Exception do AddMessage('Could Not Copy Record!');
       finally
       end;
     end;
@@ -404,11 +404,11 @@ begin
     end;
 
     if (Result <> '') then ResourceCopy(Result, filePath+fileName, TempPath);
-  except
-    on E:Exception do begin
-    slRes.Free;
-    AddMessage('Could Not Copy!');
-    end;
+  //except
+  //  on E:Exception do begin
+  //  slRes.Free;
+  //  AddMessage('Could Not Copy!');
+  //  end;
   finally
     slRes.Free;
   end; 
@@ -511,6 +511,7 @@ begin
       PatchFile := FileByName('NPCVisualTransfer.esp');
       if not Assigned(PatchFile) then
       PatchFile := FileSelect('Please select/create the file which will'#13'house all of your NPC overrides.');
+      BuildRef(PatchFile);
       if Assigned(PatchFile) then fileNameString := GetFileName(PatchFile)
       else begin
         AddMessage('-User Did Not Select Or Create A File: Quitting');
@@ -537,6 +538,7 @@ begin
         PatchFile := FileByName(Lowercase(fileNameString));
           if not Assigned(PatchFile) then 
           PatchFile := FileSelect(fileNameString+' is not loaded into TES5Edit.'#13'Select/Create a different file to use or cancel to quit');
+          BuildRef(PatchFile);
           if not Assigned(PatchFile) then begin
             AddMessage('-User Did Not Select Or Create A File: Quitting');
             bQuit := true;
@@ -597,8 +599,9 @@ begin
   Debug('Inside CreateTrasnferFormList',0);
   fl := RecordByFormID(FileByIndex(0),101404,false);
   flo := wbCopyElementToFile(fl,GetFile(ovNPC),true,true);
-  seev(flo, 'EDID', GetFileName(GetFile(ovNPC)));
+  seev(flo, 'EDID', geev(ovNPC, 'FULL'));
   Add(flo,'FormIDs',false);
+  slTotalElements.Append(HexFormID(ovNPC));
   Result := flo;
 end;
 
@@ -628,10 +631,10 @@ end;
   //If It does, it is copied over and added to slNextPass
 //Once all GRUPS have been checked, it will see if any objects were added into slNextPass.
   //If So then slNextPass is transfered to slCurrPass and the process will start again.
-//Once slNextPass is empty then the passes end.
+//Once slNextPass is empty or this has been run maxPasses times
 
 
-procedure TransferRecords(iCheckNPC, iFileToCheck: IInterface);
+procedure TransferRecords(iCheckNPC, iFileToCheck: IInterface; maxPasses: integer);
 var
   i, z: Integer;
   ElementToCheck: IInterface;
@@ -658,8 +661,13 @@ begin
       end;
     end;
   z  := z + 1;
+  if z = 1 then AddMessage('--Finished 1st Pass')
+  else if z = 2 then AddMessage('--Finished 2nd Pass')
+  else if z = 3 then AddMessage('--Finished 3rd Pass')
+  else AddMessage('--Finished '+IntToStr(z)+'th Pass');
   Debug('TransferRecords: Z : '+ IntToStr(z),2);
   until (slNextPass.Count = 0) or (z = 8);
+  
 end;
 
 
@@ -706,6 +714,7 @@ begin
       e := wbCopyElementToFile(iElementToAdd, iDestFile,false,true);
       slNextPass.Append(HexFormID(e));
       slTotal.Append(HexFormID(e));
+      Debug('CopyAndAdd: '+slTotal.DelimitedText, 2);
     end;
   end;
 end;
@@ -730,29 +739,31 @@ begin
       if Assigned(SourceNPC) and Assigned(DestNPC) then begin
           DestFL := CreateTransferFormList(DestNPC);
           TransferElements();
-          TransferRecords(DestNPC, GetFile(SourceNPC));
+          TransferRecords(DestNPC, GetFile(SourceNPC), 8);
           TransferFaceGenData();
           CleanMasters(PatchFile);
           SortMasters(PatchFile);
+          //Adding Records To Appropriate FormList
+          AddMessage('Adding Newly Created Records Into A FormList');
+          slev(DestFL, 'FormIDs', slTotalElements);
       end;
       if not(Assigned(SourceNPC)) and not(Assigned(DestNPC)) then AddMessage('Nothing Selected');
     end;
   //except
   //  on E: Exception do FreeGlobalLists();
   finally
-    RemoveMasters();
-    FreeGlobalLists();
   end;
   //if not Assigned(SourceNPC) then Result := -1;
   if bFirstTime then
   MessageDlg('As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName,mtInformation, [mbOk], 0)
   else
   MessageDlg('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember to REACTIVATE that folder or the changes will not take effect!',mtInformation, [mbOk], 0);
+  FreeGlobalLists();
 end;
 
 procedure RemoveMasters();
 var
-  i: Integer;
+  i: integer;
 begin
   for i:= 0 to Pred(slNewMasters.Count) do RemoveMaster(PatchFile, slNewMasters[i]);
 end;
