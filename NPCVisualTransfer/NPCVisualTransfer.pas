@@ -300,10 +300,11 @@ begin
       if (input1 = ' ') or (input2 = ' ') then Exit;
         iiSourceNPC := GrabWinningRecordFromSelection(input1);
         iiDestNPC := GrabWinningRecordFromSelection(input2);
-      if Equals(GetFile(iiDestNPC), PatchFile) and (OverrideCount(iiDestNPC) > 0) then begin
+      //if Equals(GetFile(iiDestNPC), PatchFile) then begin
+        Debug('ActorSelect: Removing NPC', 2);
         RemoveNPC(iiDestNPC);
         iiDestNPC := GrabWinningRecordFromSelection(input2);
-      end;
+     // end;
       sSourceNPCName := geev(iiSourceNPC, 'FULL');
       if sSourceNPCName = '' then
         sSourceNPCName := geev(iiSourceNPC, 'EDID');
