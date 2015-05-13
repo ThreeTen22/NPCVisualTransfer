@@ -45,15 +45,19 @@ begin
     Result := MasterOrSelf(iiMasterRecord);
 end;
 
-procedure ChangeFlag(i:integer; sSourceFlags:string; var sDestFlags:string);
+procedure ChangeFlag(i:integer; sSourceFlags:string; var sDestFlags:string; bForce: boolean);
 var
   c: char;
 begin
   Debug('Inside ChangeFlag',0);
   Debug('Source: '+sSourceFlags[i]+' Dest: '+ sDestFlags[i], 1);
-  if (sSourceFlags[i] <> sDestFlags[i]) then begin
-    if sDestFlags[i] = '0' then c := '1' else c := '0';
-    SetChar(sDestFlags, i, c);
+  if not bForce then begin
+    if (sSourceFlags[i] <> sDestFlags[i]) then begin
+      if sDestFlags[i] = '0' then c := '1' else c := '0';
+      SetChar(sDestFlags, i, c);
+    end;
+  end else begin
+    SetChar(sDestFlags, i, '1');
   end;
 end;
 
@@ -61,18 +65,45 @@ end;
 function AdditionalOptions(): integer;
 var
   i: Integer;
-  frm: TForm;
   sSourceFlags,sDestFlags : String;
   c: char;
-  Form1: TForm;
+  frm: TForm;
+  grp: TGroupBox;
+  cBox1, cBox2: TCheckBox;
+  okBtn: TButton;
 begin
-  Form1.Height := 600;
-  Form1.Width := 1200;
-  Form1.Position := poScreenCenter;
-  Form1.Caption := 'AdditionalOptions';
-  Form1.ClientHeight := 600;
-  Form1.ClientWidth := 1240;
+  frm := TForm.Create(nil);
+  frm.Height := 200;
+  frm.Width := 250;
+  frm.Position := poScreenCenter;
+  frm.Caption := 'VNPC';
+  //frm.ClientHeight := 230;
+  frm.ClientWidth := 250;
+    
+  grp := TGroupBox.Create(frm);
+  grp.parent := frm;
+  grp.Width := frm.ClientWidth-10;
+  grp.Height := frm.ClientHeight-60;
+  grp.left := 5;
+  grp.top := 10;
+  grp.Caption := 'Additional Options';
+    
 
+  cBox1 := cCheckBox(frm, grp, 30, 10, 230,'Transfer Default Outfits.', cbUnchecked,'This will transfer the npc''s default outfits along with his/her visuals.');
+
+  cBox2 := cCheckBox(frm,grp, cBox1.top+cBox1.height+30, 10, 230,'Force Opposite Animation Flag',cbUnchecked,'Select this to force the use of opposite animations on your changing npc');
+
+  okBtn := cButton(frm, frm,grp.top+grp.height+10,0,0,0,'Apply');
+  okBtn.Left := (frm.ClientWidth/2)-(okBtn.width/2);
+  okBtn.ModalResult := mrOk;
+  //Will worry about this later as this does not affect anything visually.  And there are other ESPs for that.
+  //cBox3 := cCheckBox(frm, grp, cBox1.top+cBox1.height+30,10,230,'Switch NPC''s Sex',cbUnchecked,'This willforce the opposite sex onto your changing npc.'#13'Will automatically switch sexes');
+  frm.ShowModal;
+
+  if cBox1.State = cbChecked then begin
+    slElementToXFer.Append('DOFT');
+    slElementToXFer.Append('SOFT');
+  end;
 
   sSourceFlags := geev(SourceNPC, 'ACBS\Flags');
   sDestFlags := geev(DestNPC, 'ACBS\Flags');
@@ -83,9 +114,13 @@ begin
 
   AddMessage(sDestFlags);
   //Gender Index: 1
-  ChangeFlag(1,sSourceFlags,sDestFlags);
+  ChangeFlag(1,sSourceFlags,sDestFlags, false);
   //Opposite Animation Index: 20 
-  ChangeFlag(20,sSourceFlags,sDestFlags);
+  if cBox2.State = cbChecked then 
+    ChangeFlag(20,sSourceFlags,sDestFlags, true)
+  else
+    ChangeFlag(20,sSourceFlags,sDestFlags, false);
+
   seev(DestNPC,'ACBS\Flags', sDestFlags);
 end;
 
@@ -902,6 +937,8 @@ end;
 
 procedure ResetGlobals();
 begin
+  slElementToXFer.Clear;
+  slElementToXFer.DelimitedText := MinElementsToModify;
   slCurrPass.Clear;
   slNextPass.Clear;
   slTotalElements.Clear;

@@ -1,3 +1,10 @@
+0.3 - More options!
+- Added an additional options form that pops up during transfer, so far there are two options.
+  - 1. Transfer Default and Sleeping Outfits.
+       -Rather than automatically doing so, you now have the option of transferring these default outfits, or sticking with the outfit already on the npc.
+  - 2. Force Opposite Animations
+       -You now have the option to turn opposite animations on irregardless of whether the npc you are transfering your visuals to has it selected or not.
+-Note: These options cannot be applied to already modified NPCs.
 
 0.2 - Standalone Update!
 - Removed the need for your patch to require the masters of the NPCs whose visuals you transfered.
