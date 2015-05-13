@@ -1,0 +1,15 @@
+
+0.2 - Standalone Update!
+- Removed the need for your patch to require the masters of the NPCs whose visuals you transfered.
+  - (ex.  If you used npcA's visuals onto npcB, you no longer need the esp file where npcA originated from).
+  -  Note: This still requires that the MODFILE of any npc whose visuals you use still be active in Mod Organizer.
+           You can safely merge these modfiles to save space as well as delete any meshes/textures which are not relevant.
+  - Depending on how this functions I may take it a step further and also make a copy of all of the assets
+    (But I would rather not If I didn't have to).
+    
+- Modified the NPC creation/deletion system to compensate for this change.  Visually there will be nothing different apart from more debug information while patching. (Which may be needed to squash bugs.)
+0.1 - Init Commit
+NPC Visual Transfer beta!
+--Created The ability for one to transfer the visuals of any NPC onto another NPC of the same type.  
+---Experimental: Can also transfer the visuals of Humanoid npcs to beast npcs but usually they don't do too much.
+---For Instructions, take a look at the instructions.txt file!
