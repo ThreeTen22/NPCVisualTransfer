@@ -15,17 +15,20 @@ const
   moDataFolder = 'VNPC_Data';
   ScriptName = 'Visual Transfer Tool';
 var 
-  sourceNPCIDs, destNPCIDs: TStringList;
+ 
   SourceNPC, DestNPC, PatchFile, DestFL: IInterface;
-  slResList,slElementToXFer,slCurrentNPCs, slLocalForms, slCurrPass, slNextPass, slTotalElements, slNewMasters: TStringList;
-  slAssets: TwbFastStringList;
+  sourceNPCIDs, destNPCIDs, slElementToXFer, slCurrentNPCs, slLocalForms, slCurrPass, slNextPass, slTotalElements, slNewMasters: TStringList;
   bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: Boolean;
   iDebugType: integer;
   //NPC Specific Bools
   bFirstTransfer: boolean;
   moPath,xferPath, sSourceNPCName, sDestNPCName: String;
   slContainers: TwbFastStringList;
+  lbActors, lbActors2: TListBox;
+  actFilter1, actFilter2: TLabeledEdit;
 
+ 
+ 
 
 function GrabWinningRecordFromSelection(input: String): IInterface;
 var
@@ -45,15 +48,19 @@ begin
     Result := MasterOrSelf(iiMasterRecord);
 end;
 
-procedure ChangeFlag(i:integer; sSourceFlags:string; var sDestFlags:string);
+procedure ChangeFlag(i:integer; sSourceFlags:string; var sDestFlags:string; bForce: boolean);
 var
   c: char;
 begin
   Debug('Inside ChangeFlag',0);
   Debug('Source: '+sSourceFlags[i]+' Dest: '+ sDestFlags[i], 1);
-  if (sSourceFlags[i] <> sDestFlags[i]) then begin
-    if sDestFlags[i] = '0' then c := '1' else c := '0';
-    SetChar(sDestFlags, i, c);
+  if not bForce then begin
+    if (sSourceFlags[i] <> sDestFlags[i]) then begin
+      if sDestFlags[i] = '0' then c := '1' else c := '0';
+      SetChar(sDestFlags, i, c);
+    end;
+  end else begin
+    SetChar(sDestFlags, i, '1');
   end;
 end;
 
@@ -61,18 +68,44 @@ end;
 function AdditionalOptions(): integer;
 var
   i: Integer;
-  frm: TForm;
   sSourceFlags,sDestFlags : String;
   c: char;
-  Form1: TForm;
+  frm2: TForm;
+  grp: TGroupBox;
+  cBox1, cBox2: TCheckBox;
+  okBtn: TButton;
 begin
-  Form1.Height := 600;
-  Form1.Width := 1200;
-  Form1.Position := poScreenCenter;
-  Form1.Caption := 'AdditionalOptions';
-  Form1.ClientHeight := 600;
-  Form1.ClientWidth := 1240;
+  Debug('Inside AdditionalOptions', 0);
+ try 
+  frm2 := TForm.Create(nil);
+  frm2.Height := 200;
+  frm2.Width := 250;
+  frm2.Position := poScreenCenter;
+  frm2.Caption := 'VNPC';
+  //frm2.ClientHeight := 230;
+  frm2.ClientWidth := 250;
 
+  grp := TGroupBox.Create(frm2);
+  grp.parent := frm2;
+  grp.Width := frm2.ClientWidth-10;
+  grp.Height := frm2.ClientHeight-60;
+  grp.left := 5;
+  grp.top := 10;
+  grp.Caption := 'Additional Options';
+
+  cBox1 := cCheckBox(frm2, grp, 30, 10, 230,'Transfer Default Outfits.', cbUnchecked,'This will transfer the npc''s default outfits along with his/her visuals.');
+  cBox2 := cCheckBox(frm2,grp, cBox1.top+cBox1.height+30, 10, 230,'Force Opposite Animation Flag',cbUnchecked,'Select this to force the use of opposite animations on your changing npc');
+  okBtn := cButton(frm2, frm2,grp.top+grp.height+10,0,0,0,'Apply');
+  okBtn.Left := (frm2.ClientWidth/2)-(okBtn.width/2);
+  okBtn.ModalResult := mrOk;
+  //Will worry about this later as this does not affect anything visually.  And there are other ESPs for that.
+  //cBox3 := cCheckBox(frm2, grp, cBox1.top+cBox1.height+30,10,230,'Switch NPC''s Sex',cbUnchecked,'This willforce the opposite sex onto your changing npc.'#13'Will automatically switch sexes');
+  frm2.ShowModal;
+
+  if cBox1.State = cbChecked then begin
+    slElementToXFer.Append('DOFT');
+    slElementToXFer.Append('SOFT');
+  end;
 
   sSourceFlags := geev(SourceNPC, 'ACBS\Flags');
   sDestFlags := geev(DestNPC, 'ACBS\Flags');
@@ -83,10 +116,16 @@ begin
 
   AddMessage(sDestFlags);
   //Gender Index: 1
-  ChangeFlag(1,sSourceFlags,sDestFlags);
+  ChangeFlag(1,sSourceFlags,sDestFlags, false);
   //Opposite Animation Index: 20 
-  ChangeFlag(20,sSourceFlags,sDestFlags);
+  if cBox2.State = cbChecked then 
+    ChangeFlag(20,sSourceFlags,sDestFlags, true)
+  else
+    ChangeFlag(20,sSourceFlags,sDestFlags, false);
   seev(DestNPC,'ACBS\Flags', sDestFlags);
+ finally
+  frm2.free;
+ end;
 end;
 
 procedure GrabActorsFromFile(iiFile: IInterface);
@@ -150,59 +189,120 @@ begin
   Remove(iFLST);
 end;
 
-function ActorSelect(grup,prompt,prompt2: string; tsSourceList,tsDestList: TStringList; var iiSourceNPC:IInterface; var iiDestNPC: IInterface): integer;
+procedure FilterAssets1();
 var
-  frm: TForm;
-  lbl, lbl2: TLabel;
-  lbActors: TListBox;
-  lbActors2: TListBox;
-  btnOk, btnCancel, btnRemoveNPC: TButton;
+  filter: string;
+  i: integer;
+begin
+  filter := LowerCase(actFilter1.Text);
+  lbActors.Items.Clear;
+  lbActors.Items.Add(' ');
+  if actFilter1.Text = '' then lbActors.Items.AddStrings(sourceNPCIDs) else
+  for i := 0 to sourceNPCIDs.Count-1 do begin
+    if Pos(filter,LowerCase(sourceNPCIDs[i])) > 0 then lbActors.Items.Add(sourceNPCIDs[i]);
+  end;
+
+end;
+
+
+procedure FilterAssets2();
+var
+  filter: string;
+  i: integer;
+begin
+  filter := LowerCase(actFilter2.Text);
+  lbActors2.Items.Clear;
+  lbActors2.Items.Add(' ');
+  if actFilter2.Text = '' then lbActors2.Items.AddStrings(destNPCIDs) else
+  for i := 0 to destNPCIDs.Count-1 do begin
+    if Pos(filter,LowerCase(destNPCIDs[i])) > 0 then lbActors2.Items.Add(destNPCIDs[i]);
+  end;
+
+end;
+
+
+procedure asfrm.edFilterOnChange1(Sender: TObject);
+begin
+  FilterAssets1();
+  lbActors.Refresh;
+end;
+
+
+procedure asfrm.edFilterOnChange2(Sender: TObject);
+begin
+  FilterAssets2();
+  lbActors2.Refresh;
+end;
+
+function ActorSelect(grup,prompt,prompt2: string; var iiSourceNPC:IInterface; var iiDestNPC: IInterface): integer;
+var
   cbActors: TComboBox;
   i,modals: integer;
   s, input1,input2: string;
   masterFile: IInterface; 
+  asfrm: TForm;
+  btnOk, btnCancel, btnRemoveNPC: TButton;
+  lbl, lbl2: TLabel;
 begin
   Debug('Inside ActorSelect',0);
-  frm := TForm.Create(nil);
-  GrabActorsFromFile(PatchFile);
+  asfrm := TForm.Create(nil);
   try
-    frm.Caption := 'Select '+ grup;
-    frm.Width := 556;
-    frm.Height := 480;
-    frm.Position := poScreenCenter;
-    
-    lbl := TLabel.Create(frm);
-    lbl.Parent := frm;
+    asfrm.Caption := 'Select '+ grup;
+    asfrm.Width := 556;
+    asfrm.Height := 480;
+    asfrm.Position := poScreenCenter;
+    lbl := TLabel.Create(asfrm);
+    lbl.Parent := asfrm;
     lbl.Width := 200;
     if Pos(#13, prompt) > 0 then begin
       lbl.Height := 60;
     end
     else begin
       lbl.Height := 30;
-      frm.Height := 160;
+      asfrm.Height := 160;
     end;
     lbl.Left := 10;
     lbl.Top := 8;
     lbl.Caption := prompt;
     lbl.Autosize := false;
     lbl.Wordwrap := True;
-    
-    lbActors := TListBox.Create(frm);
-    lbActors.Parent := frm;
-    lbActors.Top := lbl.Top + lbl.Height + 6;
+
+    actFilter1 := TLabeledEdit.Create(asfrm);
+    actFilter1.Parent := asfrm;
+    //actFilter1.LabelPosition := lpRight;
+    //actFilter1.EditLabel.Caption;
+    actFilter1.Left := 10;
+    actFilter1.Top := lbl.Top+lbl.Height+3;
+    actFilter1.Width := 230;
+    //actFilter1.OnChange := edFilterOnChange1;
+
+    lbActors := TListBox.Create(asfrm);
+    lbActors.Parent := asfrm;
+    lbActors.Top := actFilter1.Top + actFilter1.Height + 6;
     lbActors.Left := 10;
     lbActors.Width := 230;
     lbActors.Height := 300;
+    lbActors.Sorted := true;
+    
+    actFilter2 := TLabeledEdit.Create(asfrm);
+    actFilter2.Parent := asfrm;
+  //actFilter2.LabelPosition := lpRight;
+  //actFilter2.EditLabel.Caption;
+    actFilter2.Left := lbActors.Left+lbActors.Width + 60;
+    actFilter2.Top := lbl.Top+lbl.Height+3;
+    actFilter2.Width := 230;
+    //actFilter2.OnChange := edFilterOnChange2;
 
-    lbActors2 := TListBox.Create(frm);
-    lbActors2.Parent := frm;
+    lbActors2 := TListBox.Create(asfrm);
+    lbActors2.Parent := asfrm;
     lbActors2.Top := lbActors.Top;
-    lbActors2.Left := lbActors.Left+lbActors.Width + 60;
+    lbActors2.Left := actFilter2.left;
     lbActors2.Width := 230;
-    lbActors2.Height := lbActors.Height;
+    lbActors2.Height := 300;
+    lbActors2.Sorted := true;
 
-    lbl2 := TLabel.Create(frm);
-    lbl2.Parent := frm;
+    lbl2 := TLabel.Create(asfrm);
+    lbl2.Parent := asfrm;
     lbl2.Height := lbl.Height;
     lbl2.Left := lbActors2.Left;
     lbl2.Width := 200;
@@ -210,34 +310,23 @@ begin
     lbl2.Caption := prompt2;
     lbl2.Autosize := false;
     lbl2.Wordwrap := True;
-
-    lbActors.Items.Add(' ');
-    lbActors2.Items.Add(' ');
-    for i := 0 to tsSourceList.Count-1 do begin
-      lbActors.Items.Add(tsSourceList[i]);
-    end;
-    for i := 0 to tsDestList.Count-1 do begin
-      lbActors2.Items.Add(tsDestList[i]);
-    end;
     
-    btnOk := TButton.Create(frm);
-    btnOk.Parent := frm;
+    btnOk := TButton.Create(asfrm);
+    btnOk.Parent := asfrm;
     btnOk.Left := lbActors.Left + ((lbActors2.Left+lbActors2.Width-lbActors.Left)/2)-btnOk.Width-8;
     btnOk.Top := lbActors.Top + lbActors.Height + 10;
     btnOk.Caption := 'Transfer';
     btnOk.ModalResult := mrOk;
     
-    btnCancel := TButton.Create(frm);
-    btnCancel.Parent := frm;
+    btnCancel := TButton.Create(asfrm);
+    btnCancel.Parent := asfrm;
     btnCancel.Caption := 'Quit';
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := btnOk.Left + btnOk.Width + 16;
     btnCancel.Top := btnOk.Top;
-    lbActors.ItemIndex := 0;
-    lbActors2.ItemIndex := 0;
 
-    cbActors := TComboBox.Create(frm);
-    cbActors.Parent := frm;
+    cbActors := TComboBox.Create(asfrm);
+    cbActors.Parent := asfrm;
     cbActors.Style := csDropDown;
     cbActors.Sorted := false;
     cbActors.AutoDropdown := True;
@@ -250,15 +339,23 @@ begin
       cbActors.Items.Add(slCurrentNPCs[i]);
     end;
     
-    btnRemoveNPC := TButton.Create(frm);
-    btnRemoveNPC.Parent := frm;
+    btnRemoveNPC := TButton.Create(asfrm);
+    btnRemoveNPC.Parent := asfrm;
     btnRemoveNPC.Caption := 'Remove Transfered NPC';
     btnRemoveNPC.Width := 150;
     btnRemoveNPC.Left := cbActors.Left + +cbActors.Width+10;
     btnRemoveNPC.Top := cbActors.Top;
     btnRemoveNPC.ModalResult := mrYes;
 
-    modals := frm.ShowModal;
+     for i := 0 to sourceNPCIDs.Count-1 do begin
+      lbActors.Items.Add(sourceNPCIDs[i]);
+    end;
+    for i := 0 to destNPCIDs.Count-1 do begin
+      lbActors2.Items.Add(destNPCIDs[i]);
+    end;
+
+
+   modals := asfrm.ShowModal;
     if modals = mrOk then begin
       input1 := lbActors.Items[(lbActors.ItemIndex)];
       input2 := lbActors2.Items[(lbActors2.ItemIndex)];
@@ -293,7 +390,7 @@ begin
       bQuit := true;
     end;
   finally
-    frm.Free;
+    asfrm.Free;
   end;
 end;
 
@@ -452,12 +549,7 @@ var
   npcName, npcRace, filename: string;
   npcGRUP, indexRecord: IInterface;
 begin
-  sourceNPCIDs := TStringList.Create;
-  sourceNPCIDs.Duplicates := dupIgnore;
-  sourceNPCIDs.Sorted := true;
-  destNPCIDs := TStringList.Create;
-  destNPCIDs.Duplicates := dupIgnore;
-  destNPCIDs.Sorted := true;
+
   for i := 0 to FileCount - 1 do begin
   npcGRUP := GroupBySignature(FileByIndex(i), 'NPC_');
     if Assigned(npcGRUP) then begin
@@ -664,8 +756,6 @@ end;
 //Once all GRUPS have been checked, it will see if any objects were added into slNextPass.
   //If So then slNextPass is transfered to slCurrPass and the process will start again.
 //Once slNextPass is empty or this has been run maxPasses times
-
-
 procedure TransferRecords(iCheckNPC, iFileToCheck: IInterface; maxPasses: integer);
 var
   i, z, s: Integer;
@@ -722,7 +812,6 @@ begin
     end;
   end;
 end;
-
 
 procedure ChangeRecordIDAndAdd(iFormString: string);
 var
@@ -803,8 +892,6 @@ begin
   end;
 end;
 
-
-
 function Finalize: integer;
 begin
   try
@@ -818,7 +905,8 @@ begin
     end;
     while bQuit = false do begin
       ResetGlobals();
-      ActorSelect('NPC','Select the standalone NPC whose visuals'#13'you wish to use','Select the NPC who will receive'#13'the new visuals', sourceNPCIDs,destNPCIDs, sourceNPC, destNPC);
+      GrabActorsFromFile(PatchFile);
+      ActorSelect('NPC','Select the standalone NPC whose visuals'#13'you wish to use','Select the NPC who will receive'#13'the new visuals',sourceNPC, destNPC);
       if bQuit then continue;
       if Assigned(SourceNPC) and Assigned(DestNPC) then begin
           DestFL := CreateTransferFormList(DestNPC);
@@ -836,14 +924,15 @@ begin
   finally
     CleanMasters(PatchFile);
     SortMasters(PatchFile);
-    RemoveMasters();
+    FreeGlobalLists();
+    //RemoveMasters();
   end;
   //if not Assigned(SourceNPC) then Result := -1;
   if bFirstTime then
   MessageDlg('As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName,mtInformation, [mbOk], 0)
   else
   MessageDlg('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember to REACTIVATE that folder or the changes will not take effect!',mtInformation, [mbOk], 0);
-  FreeGlobalLists();
+  
 end;
 
 procedure RemoveMasters();
@@ -858,7 +947,7 @@ var
   i: integer;
 begin
   bDebug := true;
-  iDebugType := 2;
+  iDebugType := -1;
   bTrue := true;
   bFalse := false;
   bQuit := false;
@@ -897,11 +986,19 @@ begin
   slTotalElements := TStringList.Create;
   slTotalElements.Duplicates := dupIgnore;
   slNewMasters := TStringList.Create;
+  sourceNPCIDs := TStringList.Create;
+  sourceNPCIDs.Duplicates := dupIgnore;
+  sourceNPCIDs.Sorted := true;
+  destNPCIDs := TStringList.Create;
+  destNPCIDs.Duplicates := dupIgnore;
+  destNPCIDs.Sorted := true;
   ResetGlobals();
 end;
 
 procedure ResetGlobals();
 begin
+  slElementToXFer.Clear;
+  slElementToXFer.DelimitedText := MinElementsToModify;
   slCurrPass.Clear;
   slNextPass.Clear;
   slTotalElements.Clear;
@@ -914,8 +1011,6 @@ procedure FreeGlobalLists();
 begin
   Free(sourceNPCIDs);
   Free(destNPCIDs);
-  Free(slResList);
-  Free(slContainers);
   Free(slElementToXFer);
   Free(slCurrentNPCs);
   Free(slLocalForms);
@@ -923,6 +1018,7 @@ begin
   Free(slNextPass);
   Free(slTotalElements);
   Free(slNewMasters);
+  slContainers.free;
 end;
 
 procedure Free(var list:TStringList);
@@ -968,7 +1064,7 @@ end;
 //Ported over from mtefunctions.pas and modified so it does not raise errors with 3.1
 procedure EditOutOfDateLocal(minimumVersion: String; url: string);
 var
-  frm: TForm;
+  frm1: TForm;
   lbl: TLabel;
   btnOk, btnCancel: TButton;
   v: integer;
@@ -976,10 +1072,10 @@ var
 begin
   frm := TForm.Create(nil);
   try
-    frm.Caption := 'xEdit out of Date!';
-    frm.Width := 300;
-    frm.Height := 150;
-    frm.Position := poScreenCenter;
+    frm1.Caption := 'xEdit out of Date!';
+    frm1.Width := 300;
+    frm1.Height := 150;
+    frm1.Position := poScreenCenter;
     try
       s := GetVersionStringLocal(wbVersionNumber);
     except on Exception do
@@ -1014,14 +1110,14 @@ begin
     btnCancel.Caption := 'Cancel';
     btnCancel.ModalResult := mrCancel;
     
-    frm.Height := btnOk.Top + btnOk.Height + 50;
+    frm1.Height := btnOk.Top + btnOk.Height + 50;
     
-    if frm.ShowModal = mrOk then begin
+    if frm1.ShowModal = mrOk then begin
       ShellExecute(TForm(frm).Handle, 'open', 
         url, '', '', SW_SHOWNORMAL);
     end;
   finally 
-    frm.Free;
+    frm1.Free;
   end;
 end;
 //TAKEN FROM CHECK FOR ERRORS.PAS - REMOVED MESSAGES AS THEY DO NOT NEED IT
@@ -1045,6 +1141,7 @@ end;
 
 procedure Debug(s: string; i: integer);
 begin
-  if bDebug and (i = iDebugType or i < 0) then AddMessage('DEBUG:  '+s);
+  if (i = iDebugType) or (iDebugType < 0) then AddMessage('DEBUG:  '+s);
 end;
+
 end.
