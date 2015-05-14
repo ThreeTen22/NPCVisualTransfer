@@ -17,7 +17,7 @@ const
 var 
  
   SourceNPC, DestNPC, PatchFile, DestFL: IInterface;
-  sourceNPCIDs, destNPCIDs, slElementToXFer, slCurrentNPCs, slLocalForms, slCurrPass, slNextPass, slTotalElements, slNewMasters: TStringList;
+  sourceNPCIDs, destNPCIDs, slElementToXFer, slCurrentNPCs, slLocalForms, slCurrPass, slNextPass, slTotalElements, slNewMasters, slNewElements: TStringList;
   bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: Boolean;
   iDebugType: integer;
   //NPC Specific Bools
@@ -156,6 +156,7 @@ var
 begin
   Debug('Inside RemoveNPC',0);
   if Assigned(iiNPC) then begin
+    If not GetLoadOrder(GetFile(iiNPC)) = GetLoadOrder(PatchFile) then Exit;
     dHex := '00'+ CopyFromTo(HexFormID(iiNPC),3,8);
     dFileName := GetFileName(GetFile(MasterOrSelf(iiNPC)));
     DeleteFile(xferPath+moDataFolder+'\'+lMeshPath+dFileName+'\'+dHex+'.nif');
@@ -223,15 +224,19 @@ end;
 
 procedure asfrm.edFilterOnChange1(Sender: TObject);
 begin
-  FilterAssets1();
-  lbActors.Refresh;
+  if actFilter1.Modified = true then begin
+    FilterAssets1();
+    lbActors.Refresh;
+  end;
 end;
 
 
 procedure asfrm.edFilterOnChange2(Sender: TObject);
 begin
-  FilterAssets2();
-  lbActors2.Refresh;
+  if actFilter2.Modified = true then begin
+    FilterAssets2();
+    lbActors2.Refresh;
+  end;
 end;
 
 function ActorSelect(grup,prompt,prompt2: string; var iiSourceNPC:IInterface; var iiDestNPC: IInterface): integer;
@@ -269,29 +274,32 @@ begin
 
     actFilter1 := TLabeledEdit.Create(asfrm);
     actFilter1.Parent := asfrm;
-    //actFilter1.LabelPosition := lpRight;
-    //actFilter1.EditLabel.Caption;
+    //actFilter1.LabelPosition := lpTop;
+    //actFilter1.EditLabel.Caption := 'Filter...';
     actFilter1.Left := 10;
     actFilter1.Top := lbl.Top+lbl.Height+3;
     actFilter1.Width := 230;
-    //actFilter1.OnChange := edFilterOnChange1;
+    
+    actFilter1.Text := 'Filter By Name Or FormID...';
 
     lbActors := TListBox.Create(asfrm);
     lbActors.Parent := asfrm;
-    lbActors.Top := actFilter1.Top + actFilter1.Height + 6;
+    lbActors.Top := actFilter1.Top + actFilter1.Height + 3;
     lbActors.Left := 10;
     lbActors.Width := 230;
     lbActors.Height := 300;
     lbActors.Sorted := true;
+    lbActors.Items.AddStrings(sourceNPCIDs);
     
     actFilter2 := TLabeledEdit.Create(asfrm);
     actFilter2.Parent := asfrm;
-  //actFilter2.LabelPosition := lpRight;
-  //actFilter2.EditLabel.Caption;
+    //actFilter2.LabelPosition := lpTop;
+    //actFilter2.EditLabel.Caption :='Filter...';
     actFilter2.Left := lbActors.Left+lbActors.Width + 60;
     actFilter2.Top := lbl.Top+lbl.Height+3;
     actFilter2.Width := 230;
-    //actFilter2.OnChange := edFilterOnChange2;
+    
+    actFilter2.Text := 'Filter By Name Or FormID...';
 
     lbActors2 := TListBox.Create(asfrm);
     lbActors2.Parent := asfrm;
@@ -300,6 +308,7 @@ begin
     lbActors2.Width := 230;
     lbActors2.Height := 300;
     lbActors2.Sorted := true;
+    lbActors2.Items.AddStrings(destNPCIDs);
 
     lbl2 := TLabel.Create(asfrm);
     lbl2.Parent := asfrm;
@@ -347,29 +356,29 @@ begin
     btnRemoveNPC.Top := cbActors.Top;
     btnRemoveNPC.ModalResult := mrYes;
 
-     for i := 0 to sourceNPCIDs.Count-1 do begin
-      lbActors.Items.Add(sourceNPCIDs[i]);
-    end;
-    for i := 0 to destNPCIDs.Count-1 do begin
-      lbActors2.Items.Add(destNPCIDs[i]);
-    end;
-
+    // for i := 0 to sourceNPCIDs.Count-1 do begin
+    //  lbActors.Items.Add(sourceNPCIDs[i]);
+    //end;
+    //for i := 0 to destNPCIDs.Count-1 do begin
+    //  lbActors2.Items.Add(destNPCIDs[i]);
+    //end;
+   //actFilter1.OnMouseActivate := actFilter1.Text := '';
+   //actFilter2.OnMouseActivate := actFilter2.Text := '';
+   actFilter1.OnChange := edFilterOnChange1;
+   actFilter2.OnChange := edFilterOnChange2;
 
    modals := asfrm.ShowModal;
     if modals = mrOk then begin
       input1 := lbActors.Items[(lbActors.ItemIndex)];
       input2 := lbActors2.Items[(lbActors2.ItemIndex)];
       if (input1 = ' ') or (input2 = ' ') then Exit;
-        iiSourceNPC := GrabWinningRecordFromSelection(input1);
-        iiDestNPC := GrabWinningRecordFromSelection(input2);
-      if Equals(GetFile(iiDestNPC), PatchFile) and (OverrideCount(iiDestNPC) > 0) then begin
-        RemoveNPC(iiDestNPC);
-        iiDestNPC := GrabWinningRecordFromSelection(input2);
-      end;
+      iiSourceNPC := GrabWinningRecordFromSelection(input1);
+      iiDestNPC := GrabWinningRecordFromSelection(input2);
+      RemoveNPC(iiDestNPC);
+      iiDestNPC := GrabWinningRecordFromSelection(input2);
       sSourceNPCName := geev(iiSourceNPC, 'FULL');
       if sSourceNPCName = '' then
         sSourceNPCName := geev(iiSourceNPC, 'EDID');
-  
       sDestNPCName := geev(iiDestNPC, 'FULL');
       if sDestNPCName = '' then
         sDestNPCName := geev(iiDestNPC, 'EDID');
@@ -433,18 +442,17 @@ procedure TransferElements();
 var
   i: integer;
   path: string;
-  iiDest, iiSource, elementToAdd: IInterface;
+  elementToAdd: IInterface;
 begin
   Debug('Inside TransferElements',0);
-  iiDest := DestNPC;
-  iiSource := SourceNPC;
+
   AdditionalOptions();
   for i := 0 to Pred(slElementToXFer.Count) do begin
-    RemoveSubElement(iiDest,slElementToXFer[i]);
+    RemoveSubElement(DestNPC,slElementToXFer[i]);
   end;
   
   for i := 0 to Pred(slElementToXFer.Count) do begin
-    CopySubElement(iiSource, iiDest,slElementToXFer[i]);
+    CopySubElement(SourceNPC, DestNPC,slElementToXFer[i]);
   end;
   
  
@@ -736,13 +744,12 @@ var
 
 begin
   Debug('Inside IsReferencing',0);
-  Debug('IsReferencing: '+(HexFormID(elementToCheck)+ '_'+HexFormID(referenceToCheck)),1);
+  Debug('IsReferencing: '+(HexFormID(elementToCheck)+ '_'+HexFormID(referenceToCheck)),3);
   Result := false;
   refCount := ReferencedByCount(elementToCheck);
   for i := 0 to Pred(refCount) do begin
     indexRef := ReferencedByIndex(elementToCheck, i);
-    Debug('IsReferencing: ReferencedByIndex: '+ Name(indexRef)+ ' Comparing: '+ Name(referenceToCheck), 1);
-    if Equals(indexRef, referenceToCheck) then begin
+    if HexFormID(indexRef) = HexFormID(referenceToCheck) then begin
       Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
       Result := true;
       Exit;
@@ -758,10 +765,9 @@ end;
 //Once slNextPass is empty or this has been run maxPasses times
 procedure TransferRecords(iCheckNPC, iFileToCheck: IInterface; maxPasses: integer);
 var
-  i, z, s: Integer;
+  i,ii, z,zz, s, s2: Integer;
   sRecord, sLocalRecord: String;
-  ElementToCheck, ElementToCopy: IInterface;
- 
+  ElementToCheck, ElementToCopy,iElementToChange: IInterface;
 begin
   Debug('Inside TransferRecords',1);
   bFirstTransfer := true;
@@ -789,46 +795,68 @@ begin
     else if z = 3 then AddMessage('--Finished 3rd Pass')
     else AddMessage('--Finished '+IntToStr(z)+'th Pass');
     Debug('TransferRecords: Z : '+ IntToStr(z),2);
-  until (slNextPass.Count = 0) or (z = 5);
+  until (slNextPass.Count = 0) or (z = maxPasses);
 
-  for i := 0 to Pred(slTotalElements.Count) do begin
-    sRecord := slTotalElements[i];
+
+  ii := 0;
+  while ii < Pred(slTotalElements.Count) do begin
+    sRecord := slTotalElements[ii];
     sLocalRecord := '00'+Copy(sRecord, 3, 6);
+    Debug('Local Record To Check: '+ sLocalRecord, 3);
     If slLocalForms.IndexOf(sLocalRecord) > (-1) then begin
+      //If sRecord = HexFormID(DestNPC) then continue;
       If sRecord = HexFormID(DestNPC) then continue;
+      iElementToChange := RecordByHex(sRecord);
+      if not Assigned(iElementToChange) then continue;
+      iElementToChange := nil;
       ChangeRecordIDAndAdd(sRecord);
-      z := slTotalElements.IndexOf(sRecord);
-      if z > (-1) then slTotalElements.Delete(z);
-      Pred(i);
-    end;
+      zz := slTotalElements.IndexOf(sRecord);
+      //slTotalElements.Delete(zz);
+      BuildRef(GetFile(SourceNPC));
+      Inc(ii);
+    end else
+    Inc(ii);
   end;
-
   for i := 0 to Pred(slTotalElements.Count) do begin
     ElementToCopy := nil;
     ElementToCopy := RecordByHex(slTotalElements[i]);
     if Assigned(ElementToCopy) then begin
-      AddRequiredElementMasters(ElementToCopy, PatchFile, false);
-      wbCopyElementToFile(ElementToCopy, PatchFile, false, true);
+      If Signature(ElementToCopy) = 'HDPT' then begin
+        if geev(ElementToCopy, 'RNAM') <> '' then 
+          if Pos('FLST:00',geev(ElementToCopy,'RNAM')) = 0 then 
+            seev(ElementToCopy,'RNAM','A803F');
+      end;
+    AddRequiredElementMasters(ElementToCopy, PatchFile, false);
+    ElementToCopy := wbCopyElementToFile(ElementToCopy, PatchFile, false, true);
+    slNewElements.Append(HexFormID(ElementToCopy));
     end;
   end;
+  slNewElements.Insert(0,HexFormID(DestNPC));
+
+  //2ndPass
+
+
 end;
 
 procedure ChangeRecordIDAndAdd(iFormString: string);
 var
   highestLocalID, newFormIDS: String;
   oldFormID, NewFormID: cardinal;
-
+  i: integer;
   iElementToChange, iFile: IInterface;
 begin
+  Debug('Inside ChangeRecordIDAndAdd', 0);
   iElementToChange := RecordByHex(iFormString);
   highestLocalID := slLocalForms[Pred(slLocalForms.Count)];
   oldFormID := StrToInt('$'+highestLocalID);
   repeat
     NewFormID := oldFormID + Random(32000);
-  until (NewFormID < 16777216) = true;
+  until (16777215 > NewFormID);
   NewFormID := (StrToInt('$'+Copy(iFormString,1,2))*16777216) + NewFormID;
+  //slNewLocals.Append(IntToHex(NewFormID,8));
   RenumberRecord(iElementToChange,NewFormID);
-  slTotalElements.Append(HexFormID(iElementToChange));
+  slTotalElements.Append(IntToHex(NewFormID, 8));
+  //slLocalForms.Append('00'+Copy(iFormString,3,6));
 end;
 
 //taken From MergePlugin v1.9
@@ -836,13 +864,23 @@ procedure RenumberRecord(e: IInterface; NewFormID: Cardinal);
 var
   OldFormID, prc: Cardinal;
 begin
+  Debug('Inside of RenumberRecord', 0);
   OldFormID := GetLoadOrderFormID(e);
   // change references, then change form
+  //Debug('RenumberRecord: '+ Name(e) + ' '+ 'ReferenceCount: '+IntToStr(ReferencedByCount(e)),  3);
+  //Debug('RenumberRecord: OldFormID: '+ IntToHex(OldFormID, 8) + '  NewFormID:'+ IntToHex(NewFormID, 8), 3);
   prc := 0;
-  while ReferencedByCount(e) > 0 do begin
-    if prc = ReferencedByCount(e) then break;
-    prc := ReferencedByCount(e);
-    CompareExchangeFormID(ReferencedByIndex(e, 0), OldFormID, NewFormID);
+  try
+    while ReferencedByCount(e) > 0 do begin
+      if prc = ReferencedByCount(e) then break;
+      prc := ReferencedByCount(e);
+      Debug('RefedElements: '+ Name(ReferencedByIndex(e,0)), 3);
+      CompareExchangeFormID(ReferencedByIndex(e, 0), OldFormID, NewFormID);
+    end;
+
+  except
+    on E: Exception do AddMessage('End of the line');
+  finally
   end;
   SetLoadOrderFormID(e, NewFormID);
 end;
@@ -853,11 +891,12 @@ var
   grups: TStringList;
 begin
   grups := TStringList.Create;
-  grups.DelimitedText := 'HDPT,ARMO,ARMA,OTFT,RACE,TXST,FLST';
+  grups.DelimitedText := 'RACE,ARMO,HDPT,ARMA,OTFT,TXST,FLST';
   for i := Pred(grups.Count) downto 0 do begin
     AddMessage('Checking GRUP record: '+ grups[i]);
     CopyRefElementsByGRUP(grups[i], iElementToCheck);
   end;
+  grups.free;
 end;
 
 procedure CopyRefElementsByGRUP(GrupToCheck: string; referenceToCheck: IInterface);
@@ -869,7 +908,7 @@ begin
   iGRUP := GroupBySignature(GetFile(SourceNPC),GrupToCheck);
   iGrupSize := ElementCount(iGRUP);
   for i := 0 to Pred(iGrupSize) do begin
-    Debug(' CopyRefElementsByGRUP: '+ Name(iIndexElement), 1);
+    Debug(' LookingAtElement: '+ Name(iIndexElement), 1);
     iIndexElement := ElementByIndex(iGRUP, i);
     if IsReferencing(iIndexElement, referenceToCheck) then begin
       QueueCopyAndAdd(iIndexElement, PatchFile, slTotalElements);
@@ -885,9 +924,12 @@ begin
   Debug('Inside CopyAndAdd',0);
   if not CheckForErrors(0,iElementToAdd) then begin
     if slTotal.IndexOf(HexFormID(iElementToAdd)) < 0 then begin
-      slNextPass.Append(HexFormID(iElementToAdd));
+      slNextPass.Insert(0,HexFormID(iElementToAdd));
+      //if Signature(iElementToAdd) = 'FLST' then 
       slTotal.Append(HexFormID(iElementToAdd));
-      Debug('CopyAndAdd: '+slTotal.DelimitedText, 2);
+      //else
+      //slTotal.Append(HexFormID(iElementToAdd));
+      Debug('Adding ElementToTotal: '+Name(iElementToAdd), 3);
     end;
   end;
 end;
@@ -909,12 +951,16 @@ begin
       ActorSelect('NPC','Select the standalone NPC whose visuals'#13'you wish to use','Select the NPC who will receive'#13'the new visuals',sourceNPC, destNPC);
       if bQuit then continue;
       if Assigned(SourceNPC) and Assigned(DestNPC) then begin
+          if Equals(SourceNPC, DestNPC) then begin 
+            AddMessage('-Cannot Select The Same Actor');
+            continue;
+          end;
           DestFL := CreateTransferFormList(DestNPC);
           GetLocalFormIDsFromFile(PatchFile, slLocalForms);
           TransferElements();
-          TransferRecords(DestNPC, GetFile(SourceNPC), 8);
+          TransferRecords(DestNPC, GetFile(SourceNPC), 5);
           TransferFaceGenData();
-          slev(DestFL,'FormIDs',slTotalElements);
+          slev(DestFL,'FormIDs',slNewElements);
           //Adding Records To Appropriate FormList
       end;
       if not(Assigned(SourceNPC)) and not(Assigned(DestNPC)) then AddMessage('Nothing Selected');
@@ -924,22 +970,32 @@ begin
   finally
     CleanMasters(PatchFile);
     SortMasters(PatchFile);
-    FreeGlobalLists();
-    //RemoveMasters();
   end;
   //if not Assigned(SourceNPC) then Result := -1;
   if bFirstTime then
   MessageDlg('As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName,mtInformation, [mbOk], 0)
   else
   MessageDlg('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember to REACTIVATE that folder or the changes will not take effect!',mtInformation, [mbOk], 0);
-  
+  RemoveMasters();
+  FreeGlobalLists();
 end;
 
 procedure RemoveMasters();
 var
-  i: integer;
+  i, z, g: integer;
+  iGRUP, iElement: IInterface;
 begin
-  for i:= 0 to Pred(slNewMasters.Count) do RemoveMaster(PatchFile, slNewMasters[i]);
+  Debug('Removing Masters: ', 3);
+  iGRUP := GroupBySignature(PatchFile, '_NPC');
+  for z := 0 to Pred(ElementCount(iGRUP)) do begin
+    iElement := ElementByIndex(iGRUP, z);
+    g := slNewMaster.IndexOf(GetFileName(GetFile(iElement)));
+    if g > (-1) then slNewMasters.Delete(g); 
+  end;
+
+  for i:= 0 to Pred(slNewMasters.Count) do begin 
+    RemoveMaster(PatchFile, slNewMasters[i]);
+  end;
 end;
 
 function Initialize: integer;
@@ -947,7 +1003,7 @@ var
   i: integer;
 begin
   bDebug := true;
-  iDebugType := -1;
+  iDebugType := 3;
   bTrue := true;
   bFalse := false;
   bQuit := false;
@@ -985,6 +1041,7 @@ begin
   slNextPass.Duplicates := dupIgnore;
   slTotalElements := TStringList.Create;
   slTotalElements.Duplicates := dupIgnore;
+  slTotalElements.Sorted := false;
   slNewMasters := TStringList.Create;
   sourceNPCIDs := TStringList.Create;
   sourceNPCIDs.Duplicates := dupIgnore;
@@ -992,6 +1049,8 @@ begin
   destNPCIDs := TStringList.Create;
   destNPCIDs.Duplicates := dupIgnore;
   destNPCIDs.Sorted := true;
+  slNewElements := TStringList.Create;
+  slNewElements.Duplicates := dupIgnore;
   ResetGlobals();
 end;
 
@@ -1003,6 +1062,7 @@ begin
   slNextPass.Clear;
   slTotalElements.Clear;
   slLocalForms.Clear;
+  slNewElements.Clear;
   SourceNPC := nil;
   DestNPC := nil;
 end;
@@ -1018,6 +1078,7 @@ begin
   Free(slNextPass);
   Free(slTotalElements);
   Free(slNewMasters);
+  Free(slNewElements);
   slContainers.free;
 end;
 
