@@ -72,7 +72,7 @@ var
   c: char;
   frm2: TForm;
   grp: TGroupBox;
-  cBox1, cBox2: TCheckBox;
+  cBox1, cBox2, cBox3: TCheckBox;
   okBtn: TButton;
 begin
   Debug('Inside AdditionalOptions', 0);
@@ -94,7 +94,8 @@ begin
   grp.Caption := 'Additional Options';
 
   cBox1 := cCheckBox(frm2, grp, 30, 10, 230,'Transfer Default Outfits.', cbUnchecked,'This will transfer the npc''s default outfits along with his/her visuals.');
-  cBox2 := cCheckBox(frm2,grp, cBox1.top+cBox1.height+30, 10, 230,'Force Opposite Animation Flag',cbUnchecked,'Select this to force the use of opposite animations on your changing npc');
+  cBox2 := cCheckBox(frm2,grp, cBox1.top+cBox1.height+30, 10, 230,'Transfer npc inventory',cbUnchecked,'This will transfer the npc''s initial inventory along with his/her visuals.'); 
+  cBox3 := cCheckBox(frm2,grp, cBox2.top+cBox2.height+30, 10, 230,'Force Opposite Animation Flag',cbUnchecked,'Select this to force the use of opposite animations on your changing npc');
   okBtn := cButton(frm2, frm2,grp.top+grp.height+10,0,0,0,'Apply');
   okBtn.Left := (frm2.ClientWidth/2)-(okBtn.width/2);
   okBtn.ModalResult := mrOk;
@@ -107,6 +108,9 @@ begin
     slElementToXFer.Append('SOFT');
   end;
 
+  if cBox2.State = cbChecked then begin
+    slElementToXfer.Append('CNTO');
+  end;
   sSourceFlags := geev(SourceNPC, 'ACBS\Flags');
   sDestFlags := geev(DestNPC, 'ACBS\Flags');
   while Length(sSourceFlags) < 32 do
