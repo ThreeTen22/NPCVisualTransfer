@@ -1047,5 +1047,4 @@ procedure Debug(s: string; i: integer);
 begin
   if bDebug and (i = iDebugType or i < 0) then AddMessage('DEBUG:  '+s);
 end;
-
 end.
