@@ -18,17 +18,15 @@ var
  
   SourceNPC, DestNPC, PatchFile, DestFL: IInterface;
   sourceNPCIDs, destNPCIDs, slElementToXFer, slCurrentNPCs, slLocalForms, slCurrPass, slNextPass, slTotalElements, slNewMasters, slNewElements: TStringList;
-  bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: Boolean;
+  bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: boolean;
   iDebugType: integer;
   //NPC Specific Bools
+  bCustomRace, bOpAnim, bBeast: boolean;
   bFirstTransfer: boolean;
   moPath,xferPath, sSourceNPCName, sDestNPCName: String;
   slContainers: TwbFastStringList;
   lbActors, lbActors2: TListBox;
   actFilter1, actFilter2: TLabeledEdit;
-
- 
- 
 
 function GrabWinningRecordFromSelection(input: String): IInterface;
 var
@@ -449,8 +447,6 @@ var
   elementToAdd: IInterface;
 begin
   Debug('Inside TransferElements',0);
-
-  AdditionalOptions();
   for i := 0 to Pred(slElementToXFer.Count) do begin
     RemoveSubElement(DestNPC,slElementToXFer[i]);
   end;
@@ -959,6 +955,8 @@ begin
             AddMessage('-Cannot Select The Same Actor');
             continue;
           end;
+          GatherNPCInfo(SourceNPC);
+          AdditionalOptions();
           DestFL := CreateTransferFormList(DestNPC);
           GetLocalFormIDsFromFile(PatchFile, slLocalForms);
           TransferElements();
