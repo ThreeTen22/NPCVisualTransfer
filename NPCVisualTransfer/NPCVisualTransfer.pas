@@ -934,6 +934,21 @@ begin
   end;
 end;
 
+procedure GatherNPCInfo();
+var 
+  sSourceFlags, sDestFlags: string;
+begin
+  sSourceFlags := geev(SourceNPC, 'ACBS\Flags');
+  sDestFlags := geev(DestNPC, 'ACBS\Flags');
+   while Length(sSourceFlags) < 32 do
+    sSourceFlags := sSourceFlags + '0';
+  while Length(sDestFlags) < 32 do
+    sDestFlags := sDestFlags + '0';
+    
+if not Pos(':00',geev(SourceNPC, 'RNAM')) then bCustomRace := true;
+if sSourceFlags[19] = 1 then bOpAnim := true;
+end;
+
 function Finalize: integer;
 begin
   try
@@ -955,7 +970,7 @@ begin
             AddMessage('-Cannot Select The Same Actor');
             continue;
           end;
-          GatherNPCInfo(SourceNPC);
+          GatherNPCInfo();
           AdditionalOptions();
           DestFL := CreateTransferFormList(DestNPC);
           GetLocalFormIDsFromFile(PatchFile, slLocalForms);
@@ -1065,6 +1080,9 @@ begin
   slTotalElements.Clear;
   slLocalForms.Clear;
   slNewElements.Clear;
+  bCustomRace := false;
+  bOpAnim:= false;
+  bBeast := false;
   SourceNPC := nil;
   DestNPC := nil;
 end;
