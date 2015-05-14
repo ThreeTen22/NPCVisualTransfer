@@ -1,3 +1,6 @@
+0.3.1:
+- Now allows for renumbering conflicting formIDs.  This will make sure that no record gets lost or your esp gets corrupted after transfering a conflicting record.
+
 0.3 - More options!
 - Added an additional options form that pops up during transfer, so far there are two options.
   - 1. Transfer Default and Sleeping Outfits.
