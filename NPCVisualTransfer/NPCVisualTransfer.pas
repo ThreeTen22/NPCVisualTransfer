@@ -757,7 +757,7 @@ begin
   refCount := ReferencedByCount(elementToCheck);
   for i := 0 to Pred(refCount) do begin
     indexRef := ReferencedByIndex(elementToCheck, i);
-    if HexFormID(indexRef) = HexFormID(referenceToCheck) then begin
+    if FormID(indexRef) = FormID(referenceToCheck) then begin
       //Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
       Result := true;
       Exit;
