@@ -102,6 +102,7 @@ try
   rg1.Items.Add('Off');
   rg1.Columns := 3;
   rg1.ShowHint := true;
+  rg1.ItemIndex := 0;
   rg1.Hint := 'Default: Auto'#13'Auto will automatically turn opposite animations on or off based on '+sSourceNPCName+'''s _NPC record';
   //rg1.Anchors := [akTop, akRight];
 
@@ -745,25 +746,6 @@ begin
   Result := flo;
 end;
 
-function IsReferencing(elementToCheck, referenceToCheck: IInterface): boolean;
-var
-  i, refCount: integer;
-  indexRef: IInterface;
-
-begin
-  Debug('Inside IsReferencing',0);
-  //Debug('IsReferencing: '+(HexFormID(elementToCheck)+ '_'+HexFormID(referenceToCheck)),3);
-  Result := false;
-  refCount := ReferencedByCount(elementToCheck);
-  for i := 0 to Pred(refCount) do begin
-    indexRef := ReferencedByIndex(elementToCheck, i);
-    if FormID(indexRef) = FormID(referenceToCheck) then begin
-      //Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
-      Result := true;
-      Exit;
-    end;
-  end;
-end;
 
 //System is divided into GRUP search passes.
 //Each pass will check if any records in all visually related GRUPS reference objects in slCurrPass.
@@ -933,6 +915,25 @@ begin
       //slTotal.Append(HexFormID(iElementToAdd));
       Debug('-Referenced Record Found!',5);
       Debug('--Adding Record To Transfer Queue: '+Name(iElementToAdd), 5);
+    end;
+  end;
+end;
+
+function IsReferencing(elementToCheck, referenceToCheck: IInterface): boolean;
+var
+  i, refCount: integer;
+  indexRef: IInterface;
+begin
+  Debug('Inside IsReferencing',0);
+  //Debug('IsReferencing: '+(HexFormID(elementToCheck)+ '_'+HexFormID(referenceToCheck)),3);
+  Result := false;
+  refCount := ReferencedByCount(elementToCheck);
+  for i := 0 to Pred(refCount) do begin
+    indexRef := ReferencedByIndex(elementToCheck, i);
+    if FormID(indexRef) = FormID(referenceToCheck) then begin
+      //Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
+      Result := true;
+      Exit;
     end;
   end;
 end;
