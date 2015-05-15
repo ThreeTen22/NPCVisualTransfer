@@ -758,7 +758,7 @@ begin
   for i := 0 to Pred(refCount) do begin
     indexRef := ReferencedByIndex(elementToCheck, i);
     if HexFormID(indexRef) = HexFormID(referenceToCheck) then begin
-      Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
+      //Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
       Result := true;
       Exit;
     end;
@@ -777,7 +777,7 @@ var
   sRecord, sLocalRecord: String;
   ElementToCheck, ElementToCopy,iElementToChange: IInterface;
 begin
-  Debug('Inside TransferRecords',1);
+  Debug('Inside TransferRecords',0);
   bFirstTransfer := true;
   z := 0;
   if (Pos(Lowercase(GetFileName(iFileToCheck)), bethESMs)) > 0 then Exit;
@@ -791,7 +791,7 @@ begin
     slCurrPass.Clear;
     slCurrPass.DelimitedText := slNextPass.DelimitedText;
     slNextPass.Clear;
-    Debug('slCurrPass: '+slCurrPass.DelimitedText, 3);
+    Debug('Checking For Records Referencing These Forms: '+slCurrPass.DelimitedText, 5);
       for i := Pred(slCurrPass.Count) downto 0 do begin
         ElementToCheck := RecordByFormID(iFileToCheck, StrToInt('$'+slCurrPass[i]), false);
         Pass(ElementToCheck, iFileToCheck);
@@ -819,7 +819,6 @@ begin
       ChangeRecordIDAndAdd(sRecord);
       zz := slTotalElements.IndexOf(sRecord);
       //slTotalElements.Delete(zz);
-      BuildRef(GetFile(SourceNPC));
       Inc(ii);
     end else
     Inc(ii);
@@ -853,7 +852,7 @@ begin
   highestLocalID := slLocalForms[Pred(slLocalForms.Count)];
   oldFormID := StrToInt('$'+highestLocalID);
   repeat
-    NewFormID := oldFormID + Random(32000);
+    NewFormID := oldFormID + Random(16777216);
   until (16777215 > NewFormID);
   NewFormID := (StrToInt('$'+Copy(iFormString,1,2))*16777216) + NewFormID;
   //slNewLocals.Append(IntToHex(NewFormID,8));
@@ -896,7 +895,7 @@ begin
   grups := TStringList.Create;
   grups.DelimitedText := 'RACE,ARMO,HDPT,ARMA,OTFT,TXST,FLST';
   for i := Pred(grups.Count) downto 0 do begin
-    AddMessage('Checking GRUP record: '+ grups[i]);
+    Debug('Checking GRUP record: '+ grups[i],3);
     CopyRefElementsByGRUP(grups[i], iElementToCheck);
   end;
   grups.free;
@@ -911,7 +910,7 @@ begin
   iGRUP := GroupBySignature(GetFile(SourceNPC),GrupToCheck);
   iGrupSize := ElementCount(iGRUP);
   for i := 0 to Pred(iGrupSize) do begin
-    Debug(' LookingAtElement: '+ Name(iIndexElement), 1);
+    //Debug(' LookingAtElement: '+ Name(iIndexElement), 1);
     iIndexElement := ElementByIndex(iGRUP, i);
     if IsReferencing(iIndexElement, referenceToCheck) then begin
       QueueCopyAndAdd(iIndexElement, PatchFile, slTotalElements);
@@ -932,7 +931,8 @@ begin
       slTotal.Append(HexFormID(iElementToAdd));
       //else
       //slTotal.Append(HexFormID(iElementToAdd));
-      Debug('Adding ElementToTotal: '+Name(iElementToAdd), 3);
+      Debug('-Referenced Record Found!',5);
+      Debug('--Adding Record To Transfer Queue: '+Name(iElementToAdd), 5);
     end;
   end;
 end;
@@ -1136,8 +1136,7 @@ var
   i: integer;
 begin
   RemoveFilter();
-  bDebug := true;
-  iDebugType := 4;
+  iDebugType := 5;
   bTrue := true;
   bFalse := false;
   bQuit := false;
@@ -1192,7 +1191,7 @@ begin
           DestFL := CreateTransferFormList();
           GetLocalFormIDsFromFile(PatchFile, slLocalForms);
           TransferElements();
-          TransferRecords(DestNPC, GetFile(SourceNPC), 5);
+          TransferRecords(DestNPC, GetFile(SourceNPC), 8);
           TransferFaceGenData();
           slev(DestFL,'FormIDs',slNewElements);
           //Adding Records To Appropriate FormList
