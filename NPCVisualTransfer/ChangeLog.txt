@@ -1,3 +1,11 @@
+0.4.0
+- Much faster loading times.  
+- Changed some formatting for the additional options menu.  Made it more customizable. 
+- Less buggy patching experience, no more losing your active window.
+- Automatic VNPC_Data ModFolder tracking
+  -Will stop the script and give you a notification if it finds that VNPC_Data is still active.
+ 
+
 0.3.1:
 - Now allows for renumbering conflicting formIDs.  This will make sure that no record gets lost or your esp gets corrupted after transfering a conflicting record.
 
