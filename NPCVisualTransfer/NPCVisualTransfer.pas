@@ -528,9 +528,9 @@ begin
   AddMessage('ExtractFaceGen To Temp:'+ TempPath);
   
   test := TryToCopy(nifPath,nifFile);
-  Debug(test, 1);
+  Debug('Grabbing File From ' +test, 1);
   test := TryToCopy(ddsPath,ddsFile);
-  Debug(test, 1);
+  Debug('Grabbing File From ' +test, 1);
 end;
 
 function TryToCopy(filePath, fileName: String): String;
@@ -547,7 +547,7 @@ begin
     for i := Pred(slRes.Count) downto 0 do begin
       if slContainers.IndexOf(slRes[i]) <> -1 then begin
         Result := slRes[i];  
-        AddMessage(Result);
+        If Result = '' then Result := 'loose files';
         Break;
       end;
     end;
@@ -911,7 +911,7 @@ var
   i: Integer;
   e, eFile: IInterface;
 begin
-  Debug('Inside CopyAndAdd',0);
+  Debug('Inside QueueCopyAndAdd',0);
   if not CheckForErrors(0,iElementToAdd) then begin
     if slTotal.IndexOf(HexFormID(iElementToAdd)) < 0 then begin
       slNextPass.Insert(0,HexFormID(iElementToAdd));
@@ -989,7 +989,6 @@ begin
   destNPCIDs.Sorted := true;
   slNewElements := TStringList.Create;
   slNewElements.Duplicates := dupIgnore;
-  intNextID := genv(ElementByPath(PatchFile, '[TES4:00000000]\HEDR - Header'), 'Next Object ID');
   Application.HintHidePause := 10000;
   ResetGlobals();
 end;
@@ -1153,7 +1152,7 @@ var
   i: integer;
 begin
   RemoveFilter();
-  iDebugType := 3;
+  iDebugType := -1;
   bTrue := true;
   bFalse := false;
   bQuit := false;
@@ -1205,6 +1204,7 @@ begin
             continue;
           end; 
           DestFL := CreateTransferFormList();
+          intNextID := genv(ElementByPath(PatchFile, '[TES4:00000000]\HEDR - Header'), 'Next Object ID');
           GetLocalFormIDsFromFile(PatchFile, slLocalForms);
           slGrandTotalForms.AddStrings(slLocalForms);
           GetLocalFormIDsFromFile(GetFile(SourceNPC), slGrandTotalForms);
@@ -1214,7 +1214,7 @@ begin
           slev(DestFL,'FormIDs',slNewElements);
           //Adding Records To Appropriate FormList
           if bDidRenumber then begin
-            RemoveFromActorList()
+            RemoveFromActorList();
           end;
       if bDidRenumber then MessageDlg(ScriptName+ ' Warning:'#13#13'Transferring '+sSourceNPCName+'''s visuals required renumbering formIDs related to that NPC.  To prevent any errors '+sSourceNPCName+' will no longer be selectable in the main menu.  If you wish to transfer '+sSourceNPCName+'''s visuals on more/different characters then please save and quit, then relaunch this script.'+ScriptName,mtWarning,[mbOk],0);
       end;
@@ -1223,7 +1223,7 @@ begin
   //  on E: Exception do FreeGlobalLists();
   //if not Assigned(SourceNPC) then Result := -1;
   if bFirstTime then
-  ShowMessage'As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName+ 'and DO NOT SAVE any other esp but '+GetFileName(PatchFile))+ 'or you will have to reinstall them!');
+  ShowMessage'As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName+ 'and DO NOT SAVE any other esp but '+GetFileName(PatchFile))+ 'or you will have to reinstall them!')
   else
   ShowMessage('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember: Do not save any Plugins other than'+GetFileName(PatchFile)+' and REACTIVATE '+ moDataFolder);
   CleanMasters(PatchFile);
