@@ -22,9 +22,9 @@ var
   bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: boolean;
   iDebugType, intNextID: integer;
   //NPC Specific Bools
-  bCustomRace, bOpAnim, bBeast: boolean;
+  bCustomRace, bOpAnim, bBeast, bDidRenumber: boolean;
   bFirstTransfer: boolean;
-  moPath,xferPath, sSourceNPCName, sDestNPCName: String;
+  moPath,xferPath, sSourceNPCName, sDestNPCName, sSourceSelection: String;
   slContainers: TwbFastStringList;
   lbActors, lbActors2: TListBox;
   actFilter1, actFilter2: TLabeledEdit;
@@ -158,6 +158,7 @@ begin
       npcName := geev(indexRecord, 'FULL');
       if npcName = '' then
       npcName := '_'+geev(indexRecord, 'EDID');
+      if npcName[0] = '_' then continue;
       npcName := npcName + ' : ' + HexFormID(indexRecord);
       slCurrentNPCs.Append(npcName);
     end;
@@ -379,6 +380,7 @@ begin
     modals := asfrm.ShowModal;
     if modals = mrOk then begin
       input1 := lbActors.Items[(lbActors.ItemIndex)];
+      sSourceSelection := input1;
       input2 := lbActors2.Items[(lbActors2.ItemIndex)];
       if (input1 = ' ') or (input2 = ' ') then begin
       AddMessage('- Please select an actor in both lists.');
@@ -405,6 +407,10 @@ begin
       bQuit := true;
     end;
   finally
+    lbActors.free;
+    lbActors2.free;
+    actFilter1.free;
+    actFilter2.free;
     asfrm.Free;
   end;
   AddRequiredElementMasters(iiDestNPC, PatchFile, false);
@@ -775,7 +781,7 @@ begin
     slNextPass.Clear;
     Debug('Checking For Records Referencing These Forms: '+slCurrPass.DelimitedText, 5);
       for i := Pred(slCurrPass.Count) downto 0 do begin
-        ElementToCheck := RecordByFormID(iFileToCheck, StrToInt('$'+slCurrPass[i]), false);
+        ElementToCheck := RecordByFormID(iFileToCheck, StrToInt('$'+slCurrPass[i]), true);
         Pass(ElementToCheck, iFileToCheck);
       end;
     end;
@@ -799,6 +805,7 @@ begin
       iElementToChange := RecordByHex(sRecord);
       if not Assigned(iElementToChange) then continue;
       iElementToChange := nil;
+      bDidRenumber := true;
       ChangeRecordIDAndAdd(sRecord);
       zz := slTotalElements.IndexOf(sRecord);
       //slTotalElements.Delete(zz);
@@ -857,13 +864,7 @@ begin
   // change references, then change form
   Debug('RenumberRecord: '+ Name(e) + ' '+ 'ReferenceCount: '+IntToStr(ReferencedByCount(e)),  3);
   Debug('RenumberRecord: OldFormID: '+ IntToHex(OldFormID, 8) + '  NewFormID:'+ IntToHex(NewFormID, 8), 3);
-  //prc := 0;
-  //while ReferencedByCount(e) > 0 do begin
-  //  if prc = ReferencedByCount(e) then break;
-  //  prc := ReferencedByCount(e);
-  //  Debug('RefedElements: '+ Name(ReferencedByIndex(e,0)), 3);
-  //  CompareExchangeFormID(ReferencedByIndex(e, 0), OldFormID, NewFormID);
-  //end;
+
   for prc := ReferencedByCount(e)-1 downto 0 do begin
     if ReferencedByCount(e) = 0 then break;
     iRef := ReferencedByIndex(e,prc);
@@ -974,8 +975,6 @@ begin
   slCurrPass.Sorted := true;
   slCurrPass.Duplicates := dupIgnore;
   slNextPass := TStringList.Create;
-  //slNextPass.Sorted := true;
-  //slNextPass.Duplicates := dupIgnore;
   slTotalElements := TStringList.Create;
   slTotalElements.Sorted := true;
   slTotalElements.Duplicates := dupIgnore;
@@ -1010,6 +1009,7 @@ begin
   bBeast := false;
   SourceNPC := nil;
   DestNPC := nil;
+  bDidRenumber := false;
 end;
 
 procedure FreeGlobalLists();
@@ -1213,19 +1213,32 @@ begin
           TransferFaceGenData();
           slev(DestFL,'FormIDs',slNewElements);
           //Adding Records To Appropriate FormList
+          if bDidRenumber then begin
+            RemoveFromActorList()
+          end;
+      if bDidRenumber then MessageDlg(ScriptName+ ' Warning:'#13#13'Transferring '+sSourceNPCName+'''s visuals required renumbering formIDs related to that NPC.  To prevent any errors '+sSourceNPCName+' will no longer be selectable in the main menu.  If you wish to transfer '+sSourceNPCName+'''s visuals on more/different characters then please save and quit, then relaunch this script.'+ScriptName,mtWarning,[mbOk],0);
       end;
     end;
   //except
   //  on E: Exception do FreeGlobalLists();
   //if not Assigned(SourceNPC) then Result := -1;
   if bFirstTime then
-  MessageDlg('As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName,mtInformation, [mbOk], 0)
+  ShowMessage'As this is your first time running this program, I have gone ahead and created a new modfolder called '+moDataFolder+'.  After hitting the refresh button in Mod Organizer this will appear in the left pane at the very bottom.  You will need to activate this folder in order for the approprate head mesh/textures to work.'#13#13'Note: Please do not RENAME or MERGE this modfolder unless you are completely uninstalling '+ScriptName+ 'and DO NOT SAVE any other esp but '+GetFileName(PatchFile))+ 'or you will have to reinstall them!');
   else
-  MessageDlg('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember to REACTIVATE that folder or the changes will not take effect!',mtInformation, [mbOk], 0);
+  ShowMessage('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember: Do not save any Plugins other than'+GetFileName(PatchFile)+' and REACTIVATE '+ moDataFolder);
   CleanMasters(PatchFile);
   SortMasters(PatchFile);
   RemoveMasters();
   FreeGlobalLists();
+end;
+
+procedure RemoveFromActorList();
+var
+  i: Integer;
+begin
+  i := sourceNPCIDs.IndexOf(sSourceSelection);
+  sourceNPCIDs.Delete(i);
+  destNPCIDs.Delete(i);
 end;
 
 procedure RemoveMasters();
