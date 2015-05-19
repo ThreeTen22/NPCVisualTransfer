@@ -1,3 +1,6 @@
+0.4.5
+- Expanded Additional Options to allow you to choose which record override of the NPC you wanted, but as always there is an Automatic option, which will grab the highest override.
+
 0.4.0
 - Much faster loading times.  
 - Changed some formatting for the additional options menu.  Made it more customizable. 
