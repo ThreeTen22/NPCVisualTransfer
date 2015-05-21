@@ -98,8 +98,8 @@ begin
       MakeOfficial();
       if bDidRenumber then begin
           RemoveFromActorList();
-      end;
           MessageDlg(ScriptName+ ' Warning:'#13#13'Transferring '+sSourceNPCName+'''s visuals required renumbering formIDs related to that NPC.  To prevent any errors '+sSourceNPCName+' will no longer be selectable in the main menu.  If you wish to transfer '+sSourceNPCName+'''s visuals on more/different characters then please save and quit, then relaunch this script.',mtWarning,[mbOk],0);
+      end;
     end;
   end;
   CleanMasters(PatchFile);
@@ -1411,6 +1411,7 @@ begin
       end;
     end 
     else begin
+      MessageDlg('Note:  Due to the nature of non-virtualized directories it will be on you to remember what NPCs you have modified and make sure their FaceGenData and assets do not get overwritten.'#13#13'A good rule of thumb is that if you are going to alter an NPC that was modified by this script, use the "removed transferred NPC" button before doing so.' , mtWarning, [mbOk], 0);
       AddMessage('-user does not have mod organizer');
       bUsingMO := false;
     end;
