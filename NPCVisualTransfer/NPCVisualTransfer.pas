@@ -20,7 +20,7 @@ var
   bTrue, bFalse, bQuit, bUsingMO, bCreatingModFolders, bAdvancedTransfer, bFirstTime, bDebug: boolean;
   iDebugType, intNextID: integer;
   //NPC Specific Bools
-  bCustomRace, bOpAnim, bBeast, bDidRenumber, bBackupSession: boolean;
+  bCustomRace, bOpAnim, bBeast, bDidRenumber: boolean;
   bFirstTransfer: boolean;
   moPath,nmmPath, xferPath, sSourceNPCName, sDestNPCName, sSourceSelection, nifPath, ddsPath, nifFile, ddsFile: String;
   slContainers: TwbFastStringList;
@@ -99,7 +99,7 @@ begin
       if bDidRenumber then begin
           RemoveFromActorList();
       end;
-      if bDidRenumber then MessageDlg(ScriptName+ ' Warning:'#13#13'Transferring '+sSourceNPCName+'''s visuals required renumbering formIDs related to that NPC.  To prevent any errors '+sSourceNPCName+' will no longer be selectable in the main menu.  If you wish to transfer '+sSourceNPCName+'''s visuals on more/different characters then please save and quit, then relaunch this script.',mtWarning,[mbOk],0);
+          MessageDlg(ScriptName+ ' Warning:'#13#13'Transferring '+sSourceNPCName+'''s visuals required renumbering formIDs related to that NPC.  To prevent any errors '+sSourceNPCName+' will no longer be selectable in the main menu.  If you wish to transfer '+sSourceNPCName+'''s visuals on more/different characters then please save and quit, then relaunch this script.',mtWarning,[mbOk],0);
     end;
   end;
   CleanMasters(PatchFile);
@@ -735,7 +735,7 @@ begin
     tXferPath := xferPath+moDataFolder+'\';
   end else tXferPath := DataPath;
 
-  if (not bUsingMO) or (bBackupSession) then begin
+  if (not bUsingMO) then begin
   //Make Backups of what we are overriding.  Only worried about overrides
     AddMessage('-- Backing Up FaceGenData');
     ForceDirectories(TempPath+lMeshPath+sFile+'\');
@@ -1411,8 +1411,7 @@ begin
       end;
     end 
     else begin
-      MessageDlg('Note:  Due to the nature of non-virtualized directories it will be on you to remember what NPCs you have modified and make sure their FaceGenData and assets do not get overwritten.'#13#13'A good rule of thumb is that if you are going to alter an NPC that was modified by this script, use the "removed transferred NPC" button before doing so.'  mtWarning, [mbOk], 0);
-      AddMessage('-user does no t have mod organizer');
+      AddMessage('-user does not have mod organizer');
       bUsingMO := false;
     end;
     PatchFile := FileByName('NPCVisualTransfer.esp');
