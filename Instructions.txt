@@ -39,7 +39,7 @@ Nexus Mod Manager Users:
 8. Back Inside of Mod Organizer, hit the refresh button.
 9. At the bottom of your modfolders there will be a new folder called VNPC_Data, activate that folder.
 ===
-
+Mod Organizer Users:
 SUBSEQUENT RUNNING:
 1. Before running the script, deselect VNPC_Data and make sure the esp file you created is below all other NPC mods (I just stick mine at the end and then use loot to resort it again when I am finished).
 2. Repeat Steps 4-9.
@@ -52,3 +52,17 @@ TO UNINSTALL COMPLETELY:
 1. Delete VNPC_Data mod folder
 2. Delete NPCVisualTransfer mod folder
 3. Delete npcvt_Config.ini (Either in the overwrite folder or in NPCVisualTransfer folder if you moved it there).
+
+==
+
+Nexus Mod Manager Users:
+1. If you ever want to uninstall or modify an NPC you transferred via this tool.  Then please uninstall via this script first so I do not accidentally overwrite anything!
+
+
+TO UNINSTALL COMPLETELY:
+1.  Run The Script, and use the uninstall tool on every NPC, save and quit.
+2.  Remove Via NMM.
+3.  Manually Delete the VNPC_Data folder found in your data folder.
+
+3a.  You may have to manually remove your plugin file as well if you created one yourself.
+
