@@ -13,7 +13,7 @@ const
   lMeshPath = 'meshes\actors\character\facegendata\facegeom\';
   lTexPath = 'textures\actors\character\facegendata\facetint\';
   moDataFolder = 'VNPC_Data';
-  ScriptName = 'Visual Transfer Tool';
+  ScriptName = 'NPC Visual Transfer';
 var 
   SourceNPC, DestNPC, PatchFile, DestFL: IInterface;
   sourceNPCIDs, destNPCIDs, slElementToXFer, slCurrentNPCs, slLocalForms, slCurrPass, slNextPass, slTotalElements, slNewMasters, slNewElements, slGrandTotalForms,slNewXfers: TStringList;
