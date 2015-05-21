@@ -4,6 +4,7 @@ FIRST TIME RUNNING:
 a. This assumes that you have TES5Edit 3.1+ and that you have ran v3.1 at least once. (Opening the program and then immediately exiting without loading any mods will do the trick).
 b. It is also good practice to set TES5Edit.exe to automatically run as administrator. (Right-Click Tes5edit.exe -> Properties -> Select Compatibility Tab ->  Check Run As Administrator -> Apply/OK).
 
+Mod Organizer Users:
 1. Install like you would a normal mod.
 2. Goto the data tab and expand the NPC_Visual_Transfer folder
 3. Right Click RunNPCVisualTransfer.bat and goto Add as Executable
@@ -11,6 +12,14 @@ b. It is also good practice to set TES5Edit.exe to automatically run as administ
 5. Press OK when the mod selection window pops up
 6. Follow The Instructions on the script.  Will ask you to create a new file that will act as the patch. I name mine VNPC_Patch.esp
 --
+Nexus Mod Manager Users:
+1. Install like you would a normal mod.
+2. Goto Your Data folder, and find the folder NPCVisualTransfer
+3. Inside there will be a file called NPCVisualTransfer.tes5pas,  run that file (I suggest also making a shortcut of that file to the desktop).
+4. Press OK when the mod selection window pops up.
+6. Follow The Instructions on the script.  It might ask you to create a new file that will act as the patch. I name mine VNPC_Patch.esp
+--
+
   This script allows for two things:
   1.  NPC Visual Tranferring.
   2.  NPC Visual Reverting.
