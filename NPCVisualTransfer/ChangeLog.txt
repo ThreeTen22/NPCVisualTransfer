@@ -1,3 +1,11 @@
+0.5.1
+- Created new management system for NMM users.  So long as users do not modify or remove NPCs before removing them via my script I now am able to completely manage your Transfers!
+- Also reworked the backup Mechanism so it now will automatically replace any loose files it overwrites when your modified NPC gets removed or replaced.
+---Note:  It is because of this that if you want to ever visually change the npc you transfered that you remove it using my script first and then install/remove from NMM!
+
+0.5.0
+- Now allows for limited NMM capabilities
+
 0.4.5
 - Expanded Additional Options to allow you to choose which record override of the NPC you wanted, but as always there is an Automatic option, which will grab the highest override.
 
