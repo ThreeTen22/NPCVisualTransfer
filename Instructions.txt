@@ -19,6 +19,7 @@ Nexus Mod Manager Users:
 4. Press OK when the mod selection window pops up.
 6. Follow The Instructions on the script.  It might ask you to create a new file that will act as the patch. I name mine VNPC_Patch.esp
 --
+BAIN Users:  Same as NMM setup, but you will have to select "has extra directories" when installing the zip file!
 
   This script allows for two things:
   1.  NPC Visual Tranferring.
