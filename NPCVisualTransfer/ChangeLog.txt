@@ -1,3 +1,8 @@
+0.6.0
+- Added some UI guidance.  
+- Added a memo which gives you some info on what you are transfering.
+- Fixed CopyResource Issue not working on bsa files.
+
 0.5.1
 - Created new management system for NMM users.  So long as users do not modify or remove NPCs before removing them via my script I now am able to completely manage your Transfers!
 - Also reworked the backup Mechanism so it now will automatically replace any loose files it overwrites when your modified NPC gets removed or replaced.
