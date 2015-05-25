@@ -15,8 +15,9 @@ Mod Organizer Users:
 Nexus Mod Manager Users:
 1. Install like you would a normal mod.
 2. Goto Your Data folder, and find the folder NPCVisualTransfer
-3. Inside there will be a file called NPCVisualTransfer.tes5pas,  run that file (I suggest also making a shortcut of that file to the desktop).
-4. Press OK when the mod selection window pops up.
+3. Inside there will be a file called NPCVisualTransfer.tes5pas(I suggest also making a shortcut of that file to the desktop).
+4. Quit Nexus Mod Manager. Then Run NPCVisualTransfer.tes5pas.
+5. Press OK when the mod selection window pops up.
 6. Follow The Instructions on the script.  It might ask you to create a new file that will act as the patch. I name mine VNPC_Patch.esp
 --
 BAIN Users:  Same as NMM setup, but you will have to select "has extra directories" when installing the zip file!
@@ -63,8 +64,7 @@ Nexus Mod Manager Users:
 
 TO UNINSTALL COMPLETELY:
 1.  Run The Script, and use the uninstall tool on every NPC, save and quit.
-2.  Remove Via NMM.
+2.  Remove Via NMM then Quit NMM.(Or Manually remove the NPCVisualTransfer folder).
 3.  Manually Delete the VNPC_Data folder found in your data folder.
-
-3a.  You may have to manually remove your plugin file as well if you created one yourself.
+4.  Manually Delete your created plugin.
 
