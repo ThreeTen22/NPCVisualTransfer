@@ -1495,7 +1495,7 @@ begin
     if bUsingMO then begin
     MessageDlg('Configuration Complete.'#13'An ini File has been created in your overwrite folder named npcvt_Config.ini. Either keep it in the overwrite folder or move it into your NPCVisualTransfer modfolder.'#13'I have also made a new modfolder called '+moDataFolder+'. This is where the modified npc''s head texture/mesh will be saved.  Please do not modify, rename, or merge that folder in any way or this script will assume you are starting from scratch again!',mtInformation, [mbOk], 0);
     end else
-    MessageDlg('Configuration Complete.'#13'An ini File has been created in your Data folder named npcvt_Config.ini. Please do not move/rename that file in any way.'#13'I have also made a new folder in your Skyrim''s Data folder called '+moDataFolder+'. This is where the modified npc''s head texture/mesh will be saved. Along with a backup of FaceGenData every transfer.   Please do not modify, rename, or merge that folder in any way or this script will assume you are starting from scratch again!  (You can remove backups though if it gets cluttered)',mtInformation, [mbOk], 0);
+    MessageDlg('Configuration Complete.'#13'An ini File has been created in your Data folder named npcvt_Config.ini. Please do not move/rename that file in any way.'#13'I have also made a new folder in your Skyrim''s Data folder called '+moDataFolder+'. This is where a backup of overwritten FaceGenData will be stored every transfer.   Please do not modify, rename, or merge that folder in any way or this script will assume you are starting from scratch again!  (You can remove very old backups though if it gets cluttered)',mtInformation, [mbOk], 0);
   end 
   else 
   begin
