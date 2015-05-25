@@ -841,7 +841,7 @@ begin
 
   if (not bUsingMO) then begin
   //Make Backups of what we are overriding.  Only worried about overrides
-    AddMessage('-- Backing Up FaceGenData');
+    AddMessage('-- Backing Up Loose Files');
     ForceDirectories(TempPath+lMeshPath+sFile+'\');
     ForceDirectories(TempPath+lTexPath+sFile+'\');
     ForceDirectories(TempPath+'OverwrittenFaceGens\'+lMeshPath+dFile+'\');
@@ -1283,7 +1283,6 @@ end;
 
 
 //Grabs all the local FormID by hex from a file and adds it to a stringlist
-//Note : This will not work if the file contains 
 procedure GetLocalFormIDsFromFile(iFile: IInterface; slRecords: TStringList);
 var
   i: integer;
@@ -1292,8 +1291,7 @@ begin
   Debug('Inside GetLocalFormIDsFromFile '+GetFileName(iFile), 0);
   if ElementTypeString(iFile) <> 'etFile' then exit;
   if Pos(Lowercase(GetFileName(iFile)), bethESMs) > 0 then exit;
-  //start at one as we dont care for the file header which is always at 0
-  for i := 1 to RecordCount(iFile) do begin
+  for i := 0 to RecordCount(iFile) do begin
     iRecord := RecordByIndex(iFile, i);
     slRecords.Append(LocalHex(iRecord));
   end;
