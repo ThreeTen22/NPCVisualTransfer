@@ -69,7 +69,7 @@ begin
   while bQuit = false do begin
     ResetGlobals();
     GrabActorsFromFile(PatchFile, slCurrentNPCs);
-    ActorSelect('NPC','Select the standalone NPC whose visuals'#13'you wish to use','Select the NPC who will receive'#13'the new visuals',SourceNPC, DestNPC);
+    ActorSelect('NPC','Select an NPC whose visuals'#13'you wish to use','Select an NPC who will receive'#13'the new visuals',SourceNPC, DestNPC);
     if bQuit then continue;
     if Assigned(SourceNPC) and Assigned(DestNPC) then begin
       if Equals(SourceNPC, DestNPC) then begin 
@@ -484,22 +484,6 @@ begin
   p.Components[1].Text := '--- Auto: '+GetFileName(DestNPC)+' ---';
   end;
 end;
-{
-procedure rg2.SetComboBox(Sender:TObject);
-var
-  p: TObject; 
-begin
-  p := Sender.Parent.Parent;
-  if Sender.Caption = 'Manual' then begin
-  p.Components[3].Enabled := true;
-  p.Components[3].Text := '--- Please Select A Path Within ---';
-  end else begin
-  p.Components[3].Enabled := false;
-  p.Components[3].ItemIndex := (-1);
-  p.Components[3].Text := '--- Auto: '+GetFileName(DestNPC)+' ---';
-  end;
-end;
-}
 
 function AdditionalOptions(): boolean;
 var
@@ -632,18 +616,6 @@ begin
   ChangeFlag(20,sSourceFlags,sDestFlags, i);
   seev(DestNPC,'ACBS\Flags', sDestFlags);
 end;
-{
-    rg2 := cRadioGroup(frm2, frm2, tcBox.top+tcBox.height+10, 10,50,260,'Record Source For '+sDestNPCName);
-    rg2.Items.Add('Auto');
-    rg2.Items.Add('Manual');
-    rg2.Columns := 2;
-    rg2.Anchors := [akTop, akRight];
-    rg2.ItemIndex := 0;
-    rg2.ShowHint := true;
-    rg2.Hint := 'Default: Auto - Selecting the Auto option will automatically grab the winning override record, or 2nd highest override if the same npc is selected'#13'This option is mainly used for people who have an npc whose visual they want to use, without sacrificing their non-visual modifications provided'#13'by other patches.'#13'Ex.  If I Select Lydia in both columns in the last form, and select UnOfficalSkyrimPatch.esp here (if installed) then'#13'I will effectively transfer both the visuals and USKP changes to the new override.';
-    TRadioButton(rg2.Components[0]).OnClick := SetComboBox;
-    TRadioButton(rg2.Components[1]).OnClick := SetComboBox;
-}
 
 function GrabWinningRecordFromSelection(input: String): IInterface;
 var

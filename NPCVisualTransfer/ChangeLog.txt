@@ -1,3 +1,6 @@
+1.0
+- Inital Release
+
 0.6.0
 - Added some UI guidance.  
 - Added a memo which gives you some info on what you are transfering.
@@ -21,7 +24,6 @@
 - Automatic VNPC_Data ModFolder tracking
   -Will stop the script and give you a notification if it finds that VNPC_Data is still active.
  
-
 0.3.1:
 - Now allows for renumbering conflicting formIDs.  This will make sure that no record gets lost or your esp gets corrupted after transfering a conflicting record.
 
@@ -41,7 +43,9 @@
   - Depending on how this functions I may take it a step further and also make a copy of all of the assets
     (But I would rather not If I didn't have to).
     
-- Modified the NPC creation/deletion system to compensate for this change.  Visually there will be nothing different apart from more debug information while patching. (Which may be needed to squash bugs.)
+- Modified the NPC creation/deletion system to compensate for this change.  
+  Visually there will be nothing different apart from more debug information while patching. (Which may be needed to squash bugs.)
+
 0.1 - Init Commit
 NPC Visual Transfer beta!
 --Created The ability for one to transfer the visuals of any NPC onto another NPC of the same type.  
