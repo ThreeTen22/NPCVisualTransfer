@@ -114,7 +114,7 @@ begin
       ShowMessage('All NPC FaceGenData has been saved to the '+moDataFolder+' modfolder.  Remember: Do not save any Plugins other than'+GetFileName(PatchFile)+' and REACTIVATE '+ moDataFolder+''#13#13'If you wish, you can deactivate the following plugins:'#13''+slNewMasters.Text+'but do not deactivate the mods themselves.');
   end else begin
     if bFirstTime then
-      ShowMessage('As this is your first time running this program, I have gone ahead and created a new folder called '+moDataFolder+'.  This is where I will backup facegendata y.  '#13#13'Note: Please do not RENAME or REMOVE this folder unless you are completely uninstalling '+ScriptName+ ' and DO NOT SAVE any other esp but '+GetFileName(PatchFile))+ 'or you will have to reinstall them!'+''#13#13'If you wish, you can deactivate the following plugins'#13''+slNewMasters.DelimitedText+'but do not uninstall any of the mod''s textures or meshes.')
+      ShowMessage('As this is your first time running this program, I have gone ahead and created a new folder called '+moDataFolder+'.  This is where I will backup facegendata y.  '#13#13'Note: Please do not RENAME or REMOVE this folder unless you are completely uninstalling '+ScriptName+ ' and DO NOT SAVE any other esp but '+GetFileName(PatchFile)+ 'or you will have to reinstall them!'+''#13#13'If you wish, you can deactivate the following plugins'#13''+slNewMasters.DelimitedText+'but do not uninstall any of the mod''s textures or meshes.')
     else
       ShowMessage('All Backup NPC FaceGenData has been saved to the '+moDataFolder+' folder.  Remember: Do not save any Plugins other than '+GetFileName(PatchFile)+''#13'If you wish, you can deactivate the following plugins'#13''+slNewMasters.Text+''#13'but do not uninstall any of the mod''s textures or meshes.');
   end;
@@ -1497,7 +1497,7 @@ begin
       sl.free;
     end 
     else begin
-      MessageDlg('Note:  Due to the nature of non-virtualized directories it will be on you to remember what NPCs you have modified and make sure their FaceGenData and assets do not get overwritten.'#13#13'A good rule of thumb is that if you are going to alter an NPC that was modified by this script, use the "removed transferred NPC" button before doing so.' , mtWarning, [mbOk], 0);
+      MessageDlg('Note:  Due to the nature of non-virtualized directories it will be on you to remember what NPCs you have modified and make sure their FaceGenData and assets do not get overwritten.'#13#13'A good rule of thumb is that if you are going to alter an NPC that was modified by this script, use the "remove transferred NPC" button before doing so.' , mtWarning, [mbOk], 0);
       AddMessage('-user does not have mod organizer');
       bUsingMO := false;
     end;
