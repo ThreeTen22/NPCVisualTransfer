@@ -118,7 +118,7 @@ begin
     else
       ShowMessage('All Backup NPC FaceGenData has been saved to the '+moDataFolder+' folder.  Remember: Do not save any Plugins other than '+GetFileName(PatchFile)+''#13'If you wish, you can deactivate the following plugins'#13''+slNewMasters.Text+''#13'but do not uninstall any of the mod''s textures or meshes.');
   end;
-  MakeBackUp();
+  if not bUsingMO then MakeBackUp();
   FreeGlobalLists();
   Application.HintHidePause := 1000;
   RemoveFilter();
@@ -807,9 +807,9 @@ begin
   slRes := TStringList.Create;
   try
     ResourceCount(filePath+fileName, slRes);
-    ForceDirectories(TempPath+filePath);
     for i := Pred(slRes.Count) downto 0 do begin
       if slContainers.IndexOf(slRes[i]) <> -1 then begin
+        ForceDirectories(TempPath+filePath);
         Result := slRes[i];  
         Break;
       end;
@@ -1291,7 +1291,7 @@ begin
   Debug('Inside GetLocalFormIDsFromFile '+GetFileName(iFile), 0);
   if ElementTypeString(iFile) <> 'etFile' then exit;
   if Pos(Lowercase(GetFileName(iFile)), bethESMs) > 0 then exit;
-  for i := 0 to RecordCount(iFile) do begin
+  for i := 1 to RecordCount(iFile) do begin
     iRecord := RecordByIndex(iFile, i);
     slRecords.Append(LocalHex(iRecord));
   end;
@@ -1439,6 +1439,7 @@ var
   sl: TStringList;
   cFilePath, fileNameString: string;
   moButton, moButton2, filenameOK: integer;
+  rec :TSearchRec;
 begin
   xferPath := DataPath;
   bUsingMO := false;
@@ -1451,7 +1452,7 @@ begin
       bUsingMO := true;
       moPath := SelectDirectory('Select The Folder Containing ModOrganizer.exe','',DataPath,'');
       if (moPath = '') then begin 
-        AddMessage('== User Has Cancelled Directory Selection: Quitting ==');
+        AddMessage('== User Has Cancelled ModOrganizer Directory Selection: Quitting ==');
         bQuit := true;
         Exit;
       end;
@@ -1459,12 +1460,26 @@ begin
       sl.Delimiter := '\\';
       sl.StrictDelimiter := true;
       ini := TMemIniFile.Create(moPath+'\ModOrganizer.ini');
-      sl.DelimitedText := ini.ReadString('Settings','mod_directory',DataPath);
+      sl.DelimitedText := ini.ReadString('Settings','mod_directory','');
       ini.free; 
-      xferPath := '';     
+      xferPath := '';
       for i := 0 to Pred(sl.Count) do
         if sl[i] <> '' then xferPath := xferPath + sl[i]+'\';
       sl.free;
+      if xferPath = '' then begin
+        if FindFirst(moPath+'\mods\*',faDirectory, rec) = 0 then begin
+        xferPath := moPath+'\mods\';
+        FindClose(rec);
+        end;
+      end;
+      if xferPath = '' then begin
+        xferPath := SelectDirectory('Select The Folder Containing Your Mods','',moPath);
+        if (xferPath = '') then begin 
+          AddMessage('== User Has Cancelled Mods Directory Selection: Quitting ==');
+          bQuit := true;
+          Exit;
+        end;
+      end;
     end 
     else begin
       MessageDlg('Note:  Due to the nature of non-virtualized directories it will be on you to remember what NPCs you have modified and make sure their FaceGenData and assets do not get overwritten.'#13#13'A good rule of thumb is that if you are going to alter an NPC that was modified by this script, use the "remove transferred NPC" button before doing so.' , mtWarning, [mbOk], 0);
