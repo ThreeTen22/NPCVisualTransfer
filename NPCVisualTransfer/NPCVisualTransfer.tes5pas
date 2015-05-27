@@ -1481,6 +1481,7 @@ begin
           bQuit := true;
           Exit;
         end;
+        xferPath := xferPath + '\';
       end;
     end 
     else begin
