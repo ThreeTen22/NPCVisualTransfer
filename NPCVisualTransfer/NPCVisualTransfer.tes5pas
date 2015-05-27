@@ -1463,8 +1463,10 @@ begin
       sl.DelimitedText := ini.ReadString('Settings','mod_directory','');
       ini.free; 
       xferPath := '';
-      for i := 0 to Pred(sl.Count) do
-        if sl[i] <> '' then xferPath := xferPath + sl[i]+'\';
+      for i := 0 to Pred(sl.Count) do begin
+        if sl[i] <> '' then 
+          xferPath := xferPath + sl[i]+'\';
+      end;
       sl.free;
       if xferPath = '' then begin
         if FindFirst(moPath+'\mods\*',faDirectory, rec) = 0 then begin
@@ -1473,7 +1475,7 @@ begin
         end;
       end;
       if xferPath = '' then begin
-        xferPath := SelectDirectory('Select The Folder Containing Your Mods','',moPath);
+        xferPath := SelectDirectory('Select The Folder Containing Your Mods','',moPath,'');
         if (xferPath = '') then begin 
           AddMessage('== User Has Cancelled Mods Directory Selection: Quitting ==');
           bQuit := true;
