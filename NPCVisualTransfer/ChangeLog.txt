@@ -1,3 +1,7 @@
+1.0.1
+- Small Grammar Fixes
+- More Robust Mods Search
+
 1.0
 - Inital Release
 
