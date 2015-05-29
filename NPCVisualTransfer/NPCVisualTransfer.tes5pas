@@ -53,6 +53,7 @@ begin
       Result := -1;
       Exit;
   end;
+  InitAllGlobals();
 end;
 
 function Finalize: integer;
@@ -60,7 +61,6 @@ var
   bAbort: boolean;
 begin
   AddMessage('== Gathering NPC Information ==');
-  InitAllGlobals();
   GrabActors();
   if bQuit then begin
       Result := -1;
@@ -135,8 +135,6 @@ begin
   if genv(SourceNPC, 'RNAM') = 77442 then bDragon := true
   else 
   if (sl.IndexOf(IntToStr(genv(SourceNPC, 'RNAM'))) > -1) then bCreature := true;
-
-
 end;
 
 procedure TransferDiagScript(iNPC:IInterface);
@@ -152,8 +150,6 @@ begin
     ElementAssign(Ele,HighInteger,ElementByIP(pcDiag,'Data\Scripts\Script'), false);
   end;
 end;
-
-
 
 procedure MakeOfficial();
 var
@@ -700,8 +696,8 @@ begin
   dFileName := GetFileName(GetFile(MasterOrSelf(iiNPC)));
   iFLST := GetFLPrefixEleIndex('VNPC:',iiNPC,0);
   dTimestamp := '\'+Copy(EditorID(iFLST), Length(EditorID(iFLST))-13, 14)+'\';
-  wCopyFile(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif',DataPath+lMeshPath+dFileName+'\'+dHex+'.nif', false);
-  wCopyFile(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds',DataPath+lTexPath+dFileName+'\'+dHex+'.dds', false);
+  CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif'),PChar(DataPath+lMeshPath+dFileName+'\'+dHex+'.nif'), false);
+  CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds'),PChar(DataPath+lTexPath+dFileName+'\'+dHex+'.dds'), false);
   //wCopyFile(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif',DataPath+lMeshPath+dFileName+'\'+dHex+'.nif', false);
   //wCopyFile(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds',DataPath+lTexPath+dFileName+'\'+dHex+'.dds', false);
 end;
@@ -724,8 +720,8 @@ begin
       AddMessage('--Reverting FaceGenData From Backup Folder');
       iFLST := GetFLPrefixEleIndex('VNPC:',iiNPC,0);
       dTimestamp := '\'+Copy(EditorID(iFLST), Length(EditorID(iFLST))-13, 14)+'\';
-      wCopyFile(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif',DataPath+lMeshPath+dFileName+'\'+dHex+'.nif', false);
-      wCopyFile(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds',DataPath+lTexPath+dFileName+'\'+dHex+'.dds', false);
+      CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif'),PChar(DataPath+lMeshPath+dFileName+'\'+dHex+'.nif'), false);
+      CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds'),PChar(DataPath+lTexPath+dFileName+'\'+dHex+'.dds'), false);
       //wCopyFile(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif',DataPath+lMeshPath+dFileName+'\'+dHex+'.nif', false);
       //wCopyFile(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds',DataPath+lTexPath+dFileName+'\'+dHex+'.dds', false);
     end;
@@ -849,22 +845,20 @@ begin
     ForceDirectories(TempPath+'TransferredFaceGens\'+lMeshPath+dFile+'\');
     ForceDirectories(TempPath+'TransferredFaceGens\'+lTexPath+dFile+'\');
 
-    wCopyFile(tXferPath+mdFile,TempPath+'OverwrittenFaceGens\'+mdFile, false);
-    wCopyFile(tXferPath+tdFile,TempPath+'OverwrittenFaceGens\'+tdFile, false);
-
-
-    wCopyFile(TempPath+msFile,TempPath+'TransferredFaceGens\'+mdFile, false);
-    wCopyFile(TempPath+tsFile,TempPath+'TransferredFaceGens\'+tdFile, false);
+    CopyFile(PChar(tXferPath+mdFile),PChar(TempPath+'OverwrittenFaceGens\'+mdFile), false);
+    CopyFile(PChar(tXferPath+tdFile),PChar(TempPath+'OverwrittenFaceGens\'+tdFile), false);
+    CopyFile(PChar(TempPath+msFile),PChar(TempPath+'TransferredFaceGens\'+mdFile), false);
+    CopyFile(PChar(TempPath+tsFile),PChar(TempPath+'TransferredFaceGens\'+tdFile), false);
 
   end;
   ForceDirectories(tXferPath+lMeshPath+dFile+'\');
   ForceDirectories(tXferPath+lTexPath+dFile+'\');
 
   
-  wCopyFile(TempPath+msFile,tXferPath+mdFile, true);
-  wCopyFile(TempPath+tsFile,tXferPath+tdFile, true);
-  wCopyFile(TempPath+msFile,tXferPath+mdFile, false);
-  wCopyFile(TempPath+tsFile,tXferPath+tdFile, false);
+  CopyFile(PChar(TempPath+msFile),PChar(tXferPath+mdFile), true);
+  CopyFile(PChar(TempPath+tsFile),PChar(tXferPath+tdFile), true);
+  CopyFile(PChar(TempPath+msFile),PChar(tXferPath+mdFile), false);
+  CopyFile(PChar(TempPath+tsFile),PChar(tXferPath+tdFile), false);
 end;
 
 procedure TransferElements();
@@ -934,9 +928,6 @@ begin
   ddsPath := lTexPath+mFName+'\';
   ddsFile := hexID+'.dds';
 end;
-
-
-
 
 // Moved over from mtefunction.pas with a fix due to a small error from a released version. 
 function RecordByHex(id: string): IInterface;
@@ -1280,7 +1271,6 @@ begin
   slContainers.free;
   slNewXfers.free;
 end;
-
 
 //Grabs all the local FormID by hex from a file and adds it to a stringlist
 procedure GetLocalFormIDsFromFile(iFile: IInterface; slRecords: TStringList);
