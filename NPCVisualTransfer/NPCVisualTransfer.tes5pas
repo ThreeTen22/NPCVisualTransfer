@@ -696,10 +696,10 @@ begin
   dFileName := GetFileName(GetFile(MasterOrSelf(iiNPC)));
   iFLST := GetFLPrefixEleIndex('VNPC:',iiNPC,0);
   dTimestamp := '\'+Copy(EditorID(iFLST), Length(EditorID(iFLST))-13, 14)+'\';
+  DeleteFile(DataPath+moDataFolder+'\'+lMeshPath+dFileName+'\'+dHex+'.nif');
+  DeleteFile(DataPath+moDataFolder+'\'+lTexPath+dFileName+'\'+dHex+'.dds');
   CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif'),PChar(DataPath+lMeshPath+dFileName+'\'+dHex+'.nif'), false);
   CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds'),PChar(DataPath+lTexPath+dFileName+'\'+dHex+'.dds'), false);
-  //wCopyFile(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif',DataPath+lMeshPath+dFileName+'\'+dHex+'.nif', false);
-  //wCopyFile(DataPath+moDataFolder+dTimestamp+'TransferredFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds',DataPath+lTexPath+dFileName+'\'+dHex+'.dds', false);
 end;
 
 
@@ -722,8 +722,6 @@ begin
       dTimestamp := '\'+Copy(EditorID(iFLST), Length(EditorID(iFLST))-13, 14)+'\';
       CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif'),PChar(DataPath+lMeshPath+dFileName+'\'+dHex+'.nif'), false);
       CopyFile(PChar(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds'),PChar(DataPath+lTexPath+dFileName+'\'+dHex+'.dds'), false);
-      //wCopyFile(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lMeshPath+dFileName+'\'+dHex+'.nif',DataPath+lMeshPath+dFileName+'\'+dHex+'.nif', false);
-      //wCopyFile(DataPath+moDataFolder+dTimestamp+'OverwrittenFaceGens\'+lTexPath+dFileName+'\'+dHex+'.dds',DataPath+lTexPath+dFileName+'\'+dHex+'.dds', false);
     end;
   end;
   DeleteReleventRecords(iiNPC);
