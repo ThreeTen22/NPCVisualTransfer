@@ -1,3 +1,18 @@
+1.0.3
+- More Grammar Fixes
+- Fixed error occurring with users using 3.0.33
+- Doubled the copy methods, if the assets do not copy properly this time then I can say with 100% assurance that it is a Windows Permissions issue and not a program issue.
+- Tried to fix character reverting, this again deals with potential permissions problems so there may still be issues
+
+Note:  How to make transfers full proof
+1)  reinstall both skyrim and Mod Organizer (if applicable) outside of your program files directory, and into your C:/Games directory.
+2)  grant your skyrim and mod organizer/mods/ folderpaths full read/write access if necessary.
+
+
+1.0.2
+- More Grammar Fixes
+- More Robust Mod Organizer Mods Searching
+
 1.0.1
 - Small Grammar Fixes
 - More Robust Mods Search
