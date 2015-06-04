@@ -43,6 +43,7 @@ begin
 	CreateOverrides('HDPT','DATA - Flags','1',slTemp);
 	slTemp.free;
 	GrabNifPaths(GroupBySignature(iPatch, 'HDPT'),ml,tril);
+	//CreateMissingTextureSets(ml, 
 	//GetNifTextures(GroupBySignature(iPatch, 'HDPT'), tl);
 	CopyAssetsFromSL('meshes\',ml);
 	CopyAssetsFromSL('textures\',tl);
@@ -60,7 +61,7 @@ begin
 	for i := 0 to Pred(ElementCount(iGrp)) do begin
 		iEle := ElementByIndex(iGrp, i);
 		sEV := Lowercase(GetEditValue(ElementByPath(iEle,'Model\MODL')));
-		ml.Append(sEV);
+		ml.AddObject(sEV,TObject(iEle));
 		iSubEle := ElementByName(iEle,'Parts');
 		for z := 0 to Pred(ElementCount(iSubEle)) do begin
 			iCont := ElementByIndex(iSubEle, z);
@@ -173,25 +174,7 @@ var
 begin
   slRes := TStringList.Create;
   try
-    ResourceCount(filePath+fileName, slRes);
-    for i := Pred(slRes.Count) downto 0 do begin
-      if slContainers.IndexOf(slRes[i]) > -1 then begin
-        ForceDirectories(TempPath+filePath);
-        Result := slRes[i];  
-        Break;
-      end;
-    end;
-    if Pos('.nif', Result) > 0 then begin
-    	slRes.Clear;
-    	NifTextureList(ResourceOpenData(Result, filePath+fileName), slRes);
-    	for i := 0 to Pred(slRes.Count) do begin
-    		if Pos('textures/', Lowercase(slRes[i])) <> 1 then 
-    			slRes[i] := 'textures/'+slRes[i];
-    		tl.Append(slRes[i]);
-    	end;
-    end;
-    
-    
+    Result := WinningContainer(filePath, fileName, slRes);
     if (Result <> '') then ResourceCopy(Result, filePath+fileName, TempPath+filePath+fileName);
   //except
   //  on E:Exception do begin
@@ -203,6 +186,17 @@ begin
   end; 
 end;
 
+function WinningContainer(filePath,fileName:String; slRes:TStringList): String;
+begin
+	ResourceCount(filePath+fileName, slRes);
+    for i := Pred(slRes.Count) downto 0 do begin
+      	if slContainers.IndexOf(slRes[i]) > -1 then begin
+        	ForceDirectories(TempPath+filePath);
+        	Result := slRes[i];  
+        	Break;
+   		end;
+    end;
+end;
 function NormalizePath(value: string; atype: integer): string;
 begin
   if value = '' then
