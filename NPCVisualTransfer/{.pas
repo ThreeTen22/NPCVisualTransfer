@@ -43,8 +43,8 @@ begin
 	CreateOverrides('HDPT','DATA - Flags','1',slTemp);
 	GrabNifPaths(GroupBySignature(iPatch, 'HDPT'),ml,tril);
 	//GetNifTextures(GroupBySignature(iPatch, 'HDPT'), tl);
-	CopyAssetsFromSL('textures\',tl);
 	CopyAssetsFromSL('meshes\',ml);
+	CopyAssetsFromSL('textures\',tl);
 	CopyAssetsFromSL('meshes\',tril);
 	OpenExplorerWindow(TempPath);
 end;
@@ -181,9 +181,13 @@ begin
       end;
     end;
     if Pos('.nif', Result) > 0 then begin
-    slRes.Clear;
-    NifTextureList(ResourceOpenData(Result, filePath+fileName), slRes);
-    tl.AddStrings(slRes);
+    	slRes.Clear;
+    	NifTextureList(ResourceOpenData(Result, filePath+fileName), slRes);
+    	for i := 0 to Pred(slRes.Count) do begin
+    		if Pos('textures/', Lowercase(slRes[i])) <> 1 then 
+    			slRes[i] := 'textures/'+slRes[i];
+    		tl.Append(slRes[i]);
+    	end;
     end;
     
     
