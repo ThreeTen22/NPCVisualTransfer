@@ -41,6 +41,7 @@ begin
 	AddMastersToFile(iPatch, fl,false);
 	CreateOverrides('TXST','Textures (RGB/A)','actors',tl);
 	CreateOverrides('HDPT','DATA - Flags','1',slTemp);
+	slTemp.free;
 	GrabNifPaths(GroupBySignature(iPatch, 'HDPT'),ml,tril);
 	//GetNifTextures(GroupBySignature(iPatch, 'HDPT'), tl);
 	CopyAssetsFromSL('meshes\',ml);
