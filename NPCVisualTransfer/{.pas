@@ -180,7 +180,13 @@ begin
         Break;
       end;
     end;
-
+    if Pos('.nif', Result) > 0 then begin
+    slRes.Clear;
+    NifTextureList(ResourceOpenData(Result, filePath+fileName), slRes);
+    tl.AddStrings(slRes);
+    end;
+    
+    
     if (Result <> '') then ResourceCopy(Result, filePath+fileName, TempPath+filePath+fileName);
   //except
   //  on E:Exception do begin
