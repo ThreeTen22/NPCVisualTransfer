@@ -1,3 +1,6 @@
+1.0.4
+- 1.0.3 with bugfix
+
 1.0.3
 - More Grammar Fixes
 - Fixed error occurring with users using 3.0.33
@@ -6,7 +9,8 @@
 
 Note:  How to make transfers full proof
 1)  reinstall both skyrim and Mod Organizer (if applicable) outside of your program files directory, and into your C:/Games directory.
-2)  grant your skyrim and mod organizer/mods/ folderpaths full read/write access if necessary.
+2)  give your skyrim and mod organizer/mods/ folderpaths full read/write access if necessary.
+3)  Always close Nexus Mod Manager before running this patcher.
 
 
 1.0.2

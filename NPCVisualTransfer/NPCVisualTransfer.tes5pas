@@ -1298,7 +1298,7 @@ begin
   Debug('Inside GetLocalFormIDsFromFile '+GetFileName(iFile), 0);
   if ElementTypeString(iFile) <> 'etFile' then exit;
   if Pos(Lowercase(GetFileName(iFile)), bethESMs) > 0 then exit;
-  for i := 0 to RecordCount(iFile) do begin
+  for i := 0 to Pred(RecordCount(iFile)) do begin
     iRecord := RecordByIndex(iFile, i);
     slRecords.Append(LocalHex(iRecord));
   end;

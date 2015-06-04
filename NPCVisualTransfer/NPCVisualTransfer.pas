@@ -1298,7 +1298,7 @@ begin
   Debug('Inside GetLocalFormIDsFromFile '+GetFileName(iFile), 0);
   if ElementTypeString(iFile) <> 'etFile' then exit;
   if Pos(Lowercase(GetFileName(iFile)), bethESMs) > 0 then exit;
-  for i := 0 to RecordCount(iFile) do begin
+  for i := 0 to Pred(RecordCount(iFile)) do begin
     iRecord := RecordByIndex(iFile, i);
     slRecords.Append(LocalHex(iRecord));
   end;
@@ -1597,6 +1597,14 @@ begin
     m.Lines.Add(' ');
   end;
 end;
+
+procedure wlCopyFile(src, dst: string; silent: boolean);
+begin
+  if not silent then AddMessage('Copying '+src+' to '+dst);
+  ShellExecute(TForm(frmMain).Handle, 'runas', 'cmd', '/C copy /Y "'+src+'" "'+dst+'"', 
+    ExtractFilePath(src), SW_HIDE);
+end;
+
 
 procedure AddMainEverything(sl: TStringList);
 begin
