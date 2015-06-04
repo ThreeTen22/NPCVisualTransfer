@@ -43,3 +43,5 @@ Temporary Items
 .apdisk
 meta.ini
 NPCVisualTransfer.esp
+*.bak
+Instructions.txt
