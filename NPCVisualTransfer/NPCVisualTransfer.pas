@@ -1535,14 +1535,19 @@ begin
         bQuit := true;
         Exit;
       end;
-      moButton := MessageDlg('NPC Visual Transfer Reminder: '#13#13'1: Is '+moDataFolder+' below all NPC-related ModFolders?'#13#13'2: Is '+GetFileName(PatchFile)+' below all NPC-related mods in your loadorder?', mtConfirmation, [mbYes, mbNo], 0);
-      if not(moButton = mrYes) then begin
-          MessageDlg('Please check that now, otherwise some transfers will not work. Script will now exit.', mtError, [mbOk], 0);
-          AddMessage('-Did not setup correctly');
-          bQuit := true;
-          Exit;
-      end;
+      moButton := MessageDlg('NPC Visual Transfer Reminder: '#13#13'1: Is '+moDataFolder+' below all NPC-related ModFolders?'#13#13'2: Is '+fileNameString+' below all NPC-related mods in your loadorder?', mtConfirmation, [mbYes, mbNo], 0);
     end;
+    if not bUsingMO then begin
+      moButton := MessageDlg('NPC Visual Transfer Reminder: '#13#13'Is '+fileNameString+' below all NPC-related mods in your loadorder?', mtConfirmation, [mbYes, mbNo], 0);
+    end;
+    
+    if not(moButton = mrYes) then begin
+        MessageDlg('Please check that now, otherwise some transfers will not work. Script will now exit.', mtError, [mbOk], 0);
+        AddMessage('-Did not setup correctly');
+        bQuit := true;
+        Exit;
+    end;
+    
     PatchFile := FileByName(fileNameString);
     if not Assigned(PatchFile) then 
     begin
@@ -1589,7 +1594,7 @@ begin
   m.Lines.Add('__________');
   m.Lines.Add('NOTES         \');
   if ((Pos('RACE:00',GetElementEditValues(SourceNPC,'RNAM')) > 0) and (bNotSame)) then begin
-    m.Lines.Add('- This visual transfer will require changing your race to something other than the traditional humanoid races.  Usually this is because '+sSourceNPCName+' is using a custom skeleton.nif or is a vampire/werewolf.  While 99% of the time this is not a big deal, this might affect Vampire and Beast transformations if using vampire/werewolf overhauls and managers.');
+    m.Lines.Add('- This visual transfer will require changing your race to something other than the vanilla humanoid races.  Usually this is because '+sSourceNPCName+' is using a custom skeleton.nif or is a vampire/werewolf.  While 99% of the time this is not a big deal, this might affect Vampire and Beast transformations if using vampire/werewolf overhauls and managers.');
     m.Lines.Add(' ');
   end;
   if bCreature or bDragon then begin
