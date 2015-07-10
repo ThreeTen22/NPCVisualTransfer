@@ -30,8 +30,7 @@ BAIN Users:  Same as NMM setup, but you will have to select "has extra directori
   1.  Select the NPC on the left column with the visuals you want
   2.  Select the NPC on the right column which will recieve those visuals
   3.  Select 'Transfer'
-  Note: You can do this as many times as you want.
-  
+
   When Reverting:
   1. Select the npc you wish to revert from the dropdown menu.
   2. Press "Remove Transfered NPC"
