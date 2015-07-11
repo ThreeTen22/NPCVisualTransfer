@@ -1,7 +1,10 @@
 1.0.6
-- Stabilized the transfer process,  the multiple NPC glitch should not occur any longer.
+- Stabilized the transfer process,  the multiple NPC glitch should no longer occur.
 - Removed multiple transfers per session.  This was an underlying cause of many issues.
+- Transfer speeds have substantially increased.
 - Modified some functions in preparation for Follower->Player possibility.
+
+Remember,  Please Extract all BSAs.
 
 1.0.5
 - Recoded some Element Gathering so it will properly grab any necessary overrides.

@@ -15,7 +15,8 @@ unit NPCVisualTransfer;
 uses mteFunctions;
 const
   //,"Head Parts",HCLF,NAM6,NAM7,QNAM,"Tint Layers",OBND,NAM9,NAMA,FTST
-  copyGRUPS = 'TXTS,RNAM,WNAM,ANAM,"Head Parts",HCLF,NAM6,NAM7,QNAM,"Tint Layers",OBND,NAM9,NAMA,FTST';
+  copyELEMENTS = 'TXTS,RNAM,WNAM,ANAM,"Head Parts",HCLF,NAM6,NAM7,QNAM,"Tint Layers",OBND,NAM9,NAMA,FTST';
+  copyGRUPS = 'RACE,ARMO,HDPT,ARMA,OTFT,TXST,FLST';
   bethESMs = 'skyrim.esm'#13'dawnguard.esm'#13'dragonborn.esm'#13'hearthfires.esm'#13'update.esm';
   bethBSAs = 'skyrim - animations.bsa'#13'skyrim - meshes.bsa'#13'Skyrim - textures.bsa'#13'skyrim - misc.bsa'#13'dawnguard.bsa'#13'dragonborn.bsa'#13'hearthfires.bsa'#13'update.bsa';
   lMeshPath = 'meshes\actors\character\facegendata\facegeom\';
@@ -29,7 +30,7 @@ var
   iDebugType, intNextID: integer;
   //NPC Specific Bools
   bCustomRace, bOpAnim, bCreature, bDidRenumber, bDragon: boolean;
-  bFirstTransfer, bNPCToPlayer: boolean;
+  bNPCToPlayer: boolean;
   moPath,nmmPath, xferPath, sSourceNPCName, sDestNPCName, sSourceSelection, nifPath, ddsPath, nifFile, ddsFile: String;
   slContainers: TwbFastStringList;
   t: TDateTime;
@@ -62,6 +63,10 @@ begin
       Result := -1;
       Exit;
   end;
+  AddMessage('== Performing Pre-Patch Maitenence ==');
+    CleanMasters(PatchFile);
+    SortMasters(PatchFile);
+  AddMessage('== Maitenence Completed ==');
 end;
 
 function Finalize: integer;
@@ -85,22 +90,18 @@ begin
           AddMessage('-There are no overrides for '+ sDestNPCName + ': Nothing to Transfer.');
           continue;
       end;
-      Debug('PatchFile: '+ GetFileName(PatchFile),0);
-      Debug('SourceNPC:' + Name(SourceNPC)+'SourceFile: '+GetFileName(GetFile(SourceNPC)),0);
-      Debug('DestNPC:' + Name(DestNPC)+'DestFile: '+GetFileName(GetFile(DestNPC)),0);
+      //Debug('PatchFile: '+ GetFileName(PatchFile),0);
+      //Debug('SourceNPC:' + Name(SourceNPC)+'SourceFile: '+GetFileName(GetFile(SourceNPC)),0);
+      //Debug('DestNPC:' + Name(DestNPC)+'DestFile: '+GetFileName(GetFile(DestNPC)),0);
       GatherPatchingInfo();
       bAbort := AdditionalOptions();
       if bAbort then begin 
           AddMessage('- User Aborted Current Process');
           continue;
       end; 
-      AddMessage('== Performing Pre-Patch Maitenence ==');
-        CleanMasters(PatchFile);
-        SortMasters(PatchFile);
-      AddMessage('== Maitenence Completed ==');
-      Debug('PatchFile: '+ GetFileName(PatchFile),0);
-      Debug('SourceNPC:' + Name(SourceNPC)+'SourceFile: '+GetFileName(GetFile(SourceNPC)),0);
-      Debug('DestNPC:' + Name(DestNPC)+'DestFile: '+GetFileName(GetFile(DestNPC)),0);
+      //Debug('PatchFile: '+ GetFileName(PatchFile),0);
+      //Debug('SourceNPC:' + Name(SourceNPC)+'SourceFile: '+GetFileName(GetFile(SourceNPC)),0);
+      //Debug('DestNPC:' + Name(DestNPC)+'DestFile: '+GetFileName(GetFile(DestNPC)),0);
       DestFL := CreateTransferFormList();
       intNextID := genv(ElementByPath(PatchFile, '[TES4:00000000]\HEDR - Header'), 'Next Object ID');
       GetLocalFormIDsFromFile(PatchFile, slLocalForms);
@@ -278,7 +279,7 @@ var
   lBox, lBox2: TListBox;
   tEdit1, tEdit2: TEdit;
 begin
-  Debug('Inside ActorSelect',0);
+  //Debug('Inside ActorSelect',0);
   try
     asfrm := TForm.Create(nil);
     asfrm.Caption := 'Select '+ grup;
@@ -429,7 +430,7 @@ begin
       if Equals(GetFile(iiDestNPC), PatchFile) then begin
         iiDestNPC := MasterOrSelf(iiDestNPC);
         i := OverrideCount(iiDestNPC); 
-        Debug('Inside SameFile  ov: '+ IntToStr(i),1);
+        //Debug('Inside SameFile  ov: '+ IntToStr(i),1);
         if i = 1 then begin
         iiDestNPC := MasterOrSelf(iiDestNPC);
         end
@@ -438,7 +439,7 @@ begin
 
       if Equals(GetFile(iiSourceNPC), PatchFile) then begin
         iiSourceNPC := MasterOrSelf(iiSourceNPC);
-        Debug('Inside of patch',1);
+        //Debug('Inside of patch',1);
         i := OverrideCount(iiSourceNPC); 
         if i = 1 then begin
         iiSourceNPC := MasterOrSelf(iiSourceNPC);
@@ -448,7 +449,7 @@ begin
 
       if Equals(iiSourceNPC, iiDestNPC) then begin
         iiDestNPC := MasterOrSelf(iiDestNPC);
-        Debug('Inside of SameEsp',1);
+        //Debug('Inside of SameEsp',1);
         i := OverrideCount(iiDestNPC);
         if i = 0 then Exit 
         else if i = 1 then iiDestNPC := MasterOrSelf(iiDestNPC)
@@ -459,8 +460,7 @@ begin
       input1 := cbActors.Text;
       if (input1 <> 'Select A Transferred NPC Within...') then begin
         RemoveNPC(ElementByIndex(GroupBySignature(PatchFile,'NPC_'), cbActors.ItemIndex), true);
-        AddMessage(IntToStr(cbActors.ItemIndex));
-        CleanMasters(PatchFile)
+        CleanMasters(PatchFile);
       end else AddMessage('Please Select A Transferred NPC...');
     end
     else if modals = mrRetry then begin
@@ -509,7 +509,7 @@ var
   tmNotes: TMemo;
 begin
   Result := false;
-  Debug('Inside AdditionalOptions', 0);
+  //Debug('Inside AdditionalOptions', 0);
   try 
     frm2 := TForm.Create(nil);
     frm2.Height := 290;
@@ -607,7 +607,6 @@ begin
   if Result = true then exit;
 
   RemoveNPC(OverrideByFile(DestNPC,PatchFile), true);
-  CleanMasters(PatchFile);
   AddRequiredElementMasters(DestNPC, PatchFile, false);
   AddRequiredElementMasters(SourceNPC, PatchFile, false);
   slNewMasters.Append(GetFileName(GetFile(SourceNPC)));
@@ -635,7 +634,7 @@ var
   iiMasterRecord: IInterface;
 begin
   // if Length(input) < 8 then exit;
-  Debug('Inside GrabWinningRecordFromSelection', 0);
+  //Debug('Inside GrabWinningRecordFromSelection', 0);
   sHexID := CopyFromTo(input, Length(input)-7, Length(input));
   Debug(sHexID, 1);
   iiMasterRecord := RecordByHex(sHexID);
@@ -648,8 +647,8 @@ procedure ChangeFlag(i:integer; sSourceFlags:string; var sDestFlags:string; chan
 var
   c: char;
 begin
-  Debug('Inside ChangeFlag',0);
-  Debug('Source: '+sSourceFlags[i]+' Dest: '+ sDestFlags[i], 1);
+  //Debug('Inside ChangeFlag',0);
+  //Debug('Source: '+sSourceFlags[i]+' Dest: '+ sDestFlags[i], 1);
   if changeType = 0 then begin
     if (sSourceFlags[i] <> sDestFlags[i]) then begin
       if sDestFlags[i] = '0' then c := '1' else c := '0';
@@ -680,7 +679,7 @@ var
   npcGRUP, indexRecord: IInterface;
   npcName: String;
 begin
-  Debug('Inside GrabActorsFromFile', 0);
+  //Debug('Inside GrabActorsFromFile', 0);
   npcGRUP := GroupBySignature(iiFile, 'NPC_');
   if Assigned(npcGRUP) then begin
     for j := 0 to Pred(ElementCount(npcGRUP)) do begin
@@ -720,11 +719,10 @@ var
   iFLST: IInterface;
   dHex, dFileName, dTimestamp,delFile: string;
 begin
-  Debug('Inside RemoveNPC',0);
+  //Debug('Inside RemoveNPC',0);
   if not Assigned(iiNPC) then exit; 
   if bHasAssets then begin
     If (GetLoadOrder(GetFile(iiNPC)) <> GetLoadOrder(PatchFile)) then Exit;
-    AddMessage('Starting');
     dHex := '00'+ CopyFromTo(HexFormID(iiNPC),3,8);
     dFileName := GetFileName(GetFile(MasterOrSelf(iiNPC)));
     delFile := xferPath+moDataFolder+'\'+lMeshPath+dFileName+'\'+dHex+'.nif';
@@ -773,16 +771,17 @@ var
   i,s: integer;
   iFLST, iFormIDs,iElement: IInterface;
 begin
-  Debug('Inside DeleteReleventRecords', 0);
+  //Debug('Inside DeleteReleventRecords', 0);
   iFLST := GetFLPrefixEleIndex('VNPC:',iNPCToDelete,0);
   if not Assigned(iFLST) then Exit;
   iFormIDs := ElementByPath(iFLST,'FormIDs');
   for i := ElementCount(iFormIDs) - 1 downto 0 do begin
     iElement := ElementByIndex(iFormIDs, i);
     if not Assigned(iElement) then continue;
-    RemoveNode(WinningOverride(LinksTo(iElement)));
+    if Equals(GetFile(LinksTo(iElement)),PatchFile) then
+      Remove(LinksTo(iElement));
   end;
-  RemoveNode(iFLST);
+  Remove(iFLST);
 end;
 
 procedure TransferFaceGenData();
@@ -792,7 +791,6 @@ var
   sourceLocalHexID, destLocalHexID, destFileName, sourceFilename: String;
   tempFile: IInterface;
 begin
-  AddMessage('Inside Of TransferFaceGenData');
   sourceLocalHexID := '00'+ CopyFromTo(HexFormID(SourceNPC), 3, 8);
   destLocalHexID := '00'+ CopyFromTo(HexFormID(DestNPC), 3, 8);
   tempFile := MasterOrSelf(DestNPC);
@@ -806,9 +804,9 @@ begin
   AddMessage(ddsPath);
   AddMessage(ddsFile);
   test := TryToCopy(nifPath,nifFile);
-  Debug('Grabbing File From ' +test, 10);
+  //Debug('Grabbing File From ' +test, 10);
   test := TryToCopy(ddsPath,ddsFile);
-  Debug('Grabbing File From ' +test, 10);
+  //Debug('Grabbing File From ' +test, 10);
   MoveRenameFaceGen(sourceLocalHexID, sourceFilename, destLocalHexID, destFileName);
 end;
 
@@ -818,7 +816,7 @@ var
   slRes: TStringList;
   fileString: String;
 begin
-  Debug('Inside TryToCopy',0);
+  //Debug('Inside TryToCopy',0);
   slRes := TStringList.Create;
   try
     ResourceCount(filePath+fileName, slRes);
@@ -845,7 +843,7 @@ procedure MoveRenameFaceGen(sHex,sFile,dHex,dFile: String);
 var
   tXferPath, tsFile, tdFile, msFile, mdFile: String;
 begin
-  Debug('Inside MoveRenameFaceGen',0);
+  //Debug('Inside MoveRenameFaceGen',0);
   msFile := lMeshPath+sFile+'\'+sHex+'.nif';
   mdFile := lMeshPath+dFile+'\'+dHex+'.nif';
   tsFile := lTexPath+sFile+'\'+sHex+'.dds';
@@ -889,7 +887,7 @@ var
   path: string;
   elementToAdd: IInterface;
 begin
-  Debug('Inside TransferElements',0);
+  //Debug('Inside TransferElements',0);
   for i := 0 to Pred(slElementToXFer.Count) do begin
     RemoveSubElement(DestNPC,slElementToXFer[i]);
   end;
@@ -903,7 +901,7 @@ procedure RemoveSubElement(iiRecord: IInterface; elementName: String);
 var
   elementToClean: IInterface;
 begin
-  Debug('Inside RemoveSubElement',0);
+  //Debug('Inside RemoveSubElement',0);
   elementToClean := ElementByIP(iiRecord, elementName);
   if Assigned(elementToClean) then begin
     AddMessage('Removed : '+elementName);
@@ -915,7 +913,7 @@ procedure CopySubElement(iiS,iiD: IInterface; elementName: String);
 var
   elementToCopy: IInterface;
 begin
-  Debug('Inside CopySubElement',0);
+  //Debug('Inside CopySubElement',0);
   elementToCopy := ElementByIP(iiS, elementName);
   if Assigned(elementToCopy) then begin
     if not CheckForErrors(0,elementToCopy) then begin
@@ -938,7 +936,7 @@ var
   oFName, mFName, mstrShortName, bsaToCheck, hexID, test: String;
   iiNPCMaster: IInterface;
 begin
-  Debug('Inside ExtractFaceGeom',0);
+  //Debug('Inside ExtractFaceGeom',0);
   bFound := false;
   oFName := GetFileName(GetFile(iiNPC));
   iiNPCMaster := MasterOrSelf(iiNPC);
@@ -985,7 +983,7 @@ var
   profile: TStringList;
   i: integer;
 begin
-  Debug('Inside IsDataFolderLoaded',0);
+  //Debug('Inside IsDataFolderLoaded',0);
   Result := false;
   moINI := TMemIniFile.Create(mPath+'\ModOrganizer.ini');
   selectedProfile := moINI.ReadString('General','selected_profile','');
@@ -1004,13 +1002,11 @@ function CreateTransferFormList(): IInterface;
 var 
   fl, flo: IInterface;
 begin
-  Debug('Inside CreateTrasnferFormList',0);
+  //Debug('Inside CreateTrasnferFormList',0);
   fl := RecordByFormID(FileByIndex(0),101404,false);
   flo := wbCopyElementToFile(fl,PatchFile,true,true);
   seev(flo, 'EDID', 'VNPC: '+sDestNPCName+'''s records');
   Add(flo,'FormIDs',false);
-  slTotalElements.Append(HexFormID(DestNPC));
-  slev(flo,'FormIDs',slTotalElements);
   Result := flo;
 end;
 
@@ -1024,46 +1020,49 @@ end;
 
 procedure TransferRecords(iCheckNPC, iFileToCheck: IInterface; maxPasses: integer);
 var
+  bFirstPass: boolean;
   i,ii, z,zz, s, s2: Integer;
   sRecord, sLocalRecord: String;
   ElementToCheck, ElementToCopy,iElementToChange: IInterface;
 begin
-  Debug('Inside TransferRecords',0);
-  bFirstTransfer := true;
+  //Debug('Inside TransferRecords',0);
+  bFirstPass := true;
   z := 0;
   if (Pos(Lowercase(GetFileName(iFileToCheck)), bethESMs)) > 0 then Exit;
   if not HasGroup(iFileToCheck, 'ARMO') then Exit;
   repeat
-    if bFirstTransfer then begin
-      Pass(iCheckNPC, iFileToCheck);
-      bFirstTransfer := false;
-    end 
-    else begin
-    slCurrPass.Clear;
-    slCurrPass.DelimitedText := slNextPass.DelimitedText;
-    slNextPass.Clear;
-    Debug('Checking For Records Referencing These Forms: '+slCurrPass.DelimitedText, 5);
-      for i := Pred(slCurrPass.Count) downto 0 do begin
-        ElementToCheck := RecordByFile(RecordByHex(slCurrPass[i]),iFileToCheck);
-        //ElementToCheck := RecordByFormID(iFileToCheck, StrToInt('$'+slCurrPass[i]), true);
-        Pass(ElementToCheck, iFileToCheck);
+    slCurrPass.clear;
+    if bFirstPass then begin
+      slCurrPass.AddObject(HexFormID(iCheckNPC), TObject(iCheckNPC));
+      //Debug('slCurPass: '+ IntToStr(slCurrPass.Count),1);
+      //Debug('slCurPass Has Element: ' + BoolToStr(Assigned(ObjectToElement(slCurrPass.Objects[0]))),1);
+      bFirstPass := false;
+    end else begin
+      for i := 0 to Pred(slNextPass.Count) do begin
+        //Debug('NexPass Item: '+slNextPass[i],1);
+        slCurrPass.AddObject(slNextPass[i], TObject(RecordByFile(RecordByHex(slNextPass[i]),iFileToCheck)));
       end;
     end;
+    //Debug('What slCurrPass Grabbed: '+slNextPass.DelimitedText, 5);
+    slNextPass.clear;
+    //Debug('Checking For Records Referencing These Forms: '+slCurrPass.DelimitedText, 5);
+    
+    Pass(iFileToCheck);
     Inc(z);
     if z = 1 then AddMessage('--Finished 1st Pass')
     else if z = 2 then AddMessage('--Finished 2nd Pass')
     else if z = 3 then AddMessage('--Finished 3rd Pass')
     else AddMessage('--Finished '+IntToStr(z)+'th Pass');
-    Debug('TransferRecords: Z : '+ IntToStr(z),2);
+    //Debug('TransferRecords: Z : '+ IntToStr(z),2);
   until (slNextPass.Count = 0) or (z = maxPasses);
 
   ii := (-1);
-  Debug('slTotalElements: ' + slTotalElements.DelimitedText, 3);
+  //Debug('slTotalElements: ' + slTotalElements.DelimitedText, 3);
   while ii < Pred(slTotalElements.Count) do begin
     Inc(ii);
     sRecord := slTotalElements[ii];
     sLocalRecord := '00'+Copy(sRecord, 3, 6);
-    Debug('Local Record To Check: '+ sLocalRecord +' '+ IntToStr(ii), 3);
+    //Debug('Local Record To Check: '+ sLocalRecord +' '+ IntToStr(ii), 3);
     If slLocalForms.IndexOf(sLocalRecord) > (-1) then begin
       If sRecord = HexFormID(DestNPC) then continue;
       iElementToChange := RecordByFile(RecordByHex(sRecord), iFileToCheck);
@@ -1075,9 +1074,9 @@ begin
       //slTotalElements.Delete(zz);
     end;
   end;
+
   for i := 0 to Pred(slTotalElements.Count) do begin
-    ElementToCopy := nil;
-    ElementToCopy := RecordByHex(slTotalElements[i]);
+      ElementToCopy := ObjectToElement(slTotalElements.Objects[i]);
     if Assigned(ElementToCopy) then begin
       If Equals(GetFile(ElementToCopy), PatchFile) then continue;
       AddRequiredElementMasters(ElementToCopy, PatchFile, false);
@@ -1090,76 +1089,68 @@ begin
   slNewElements.Insert(0,HexFormID(DestNPC));
 end;
 
-procedure Pass(iElementToCheck: IInterface; iFileToCheck: IInterface);
+procedure Pass(iFileToCheck: IInterface);
 var
   i: integer;
   grups: TStringList;
 begin
   grups := TStringList.Create;
-  grups.DelimitedText := 'RACE,ARMO,HDPT,ARMA,OTFT,TXST,FLST';
+  grups.DelimitedText := copyGRUPS;
   for i := Pred(grups.Count) downto 0 do begin
-    Debug('Checking GRUP record: '+ grups[i],3);
-    CopyRefElementsByGRUP(grups[i], iElementToCheck);
+    //Debug('Checking GRUP record: '+ grups[i],3);
+    CopyRefElementsByGRUP(grups[i],iFileToCheck);
   end;
   grups.free;
 end;
 
-procedure CopyRefElementsByGRUP(GrupToCheck: string; referenceToCheck: IInterface);
+procedure CopyRefElementsByGRUP(GrupToCheck: string; iFile: IInterface);
 var 
-  i, iGrupSize: integer;
+  i,j: integer;
   iGRUP, iIndexElement: IInterface;
 begin
-  Debug('Inside CopyRefElementsByGRUP',0);
-  iGRUP := GroupBySignature(GetFile(SourceNPC),GrupToCheck);
-  iGrupSize := ElementCount(iGRUP);
-  for i := 0 to Pred(iGrupSize) do begin
-    //Debug(' LookingAtElement: '+ Name(iIndexElement), 1);
+  //Debug('Inside CopyRefElementsByGRUP',0);
+  iGRUP := GroupBySignature(iFile,GrupToCheck);
+  for i := 0 to Pred(ElementCount(iGRUP)) do begin
     iIndexElement := ElementByIndex(iGRUP, i);
-    if IsReferencing(iIndexElement, referenceToCheck) then begin
-      QueueCopy(iIndexElement, PatchFile, slTotalElements);
-    end;
+    //Debug(' LookingAtElement: '+ Name(iIndexElement), 1);
+    if slTotalElements.IndexOf(HexFormID(iIndexElement)) > (-1) then continue;
+      if IsUsedByCurrElements(iIndexElement) then begin
+        QueueCopy(iIndexElement);
+      end;
   end;
 end;
 
-function IsReferencing(elementToCheck, referenceToCheck: IInterface): boolean;
+function IsUsedByCurrElements(elementToCheck: IInterface): boolean;
 var
-  i, refCount: integer;
+  i, j, refCount: integer;
   indexRef: IInterface;
 begin
-  Debug('Inside IsReferencing',0);
-  //Debug('IsReferencing: '+(HexFormID(elementToCheck)+ '_'+HexFormID(referenceToCheck)),3);
+  //Debug('Inside IsReferencing',0);
   Result := false;
   refCount := ReferencedByCount(elementToCheck);
   for i := 0 to Pred(refCount) do begin
     indexRef := ReferencedByIndex(elementToCheck, i);
-    //if FormID(indexRef) = FormID(referenceToCheck) then begin
-    if Equals(indexRef, referenceToCheck) then begin
-      //Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
-      Result := true;
-      Exit;
+    for j := 0 to Pred(slCurrPass.Count) do begin
+      if Equals(indexRef, ObjectToElement(slCurrPass.Objects[j])) then begin
+        //Debug('IsReferencing: FileNames: '+GetFileName(GetFile(indexRef))+ '',1);
+        Result := true;
+        Exit;
+      end;
     end;
   end;
 end;
 
-procedure QueueCopy(iElementToAdd, iDestFile: IInterface; var slTotal:TStringList);
+procedure QueueCopy(iElementToAdd: IInterface);
 var
   i: Integer;
-  e, eFile: IInterface;
   s: string;
 begin
-  Debug('Inside QueueCopyAndAdd',0);
-  if not CheckForErrors(0,iElementToAdd) then begin
+    //Debug('Inside QueueCopyAndAdd',0);
     s := HexFormID(iElementToAdd);
-    if slTotal.IndexOf(s) < 0 then begin
-      slNextPass.Insert(0,s);
-      //if Signature(iElementToAdd) = 'FLST' then 
-      slTotal.Append(s);
-      //else
-      //slTotal.Append(HexFormID(iElementToAdd));
-      Debug('-Referenced Record Found!',5);
-      Debug('--Adding Record To Transfer Queue: '+Name(iElementToAdd), 5);
+    if slTotalElements.IndexOf(s) < 0 then begin
+      slNextPass.Append(s);
+      slTotalElements.AddObject(s, TObject(iElementToAdd));
     end;
-  end;
 end;
 
 procedure ChangeRecordIDAndAdd(iFormString: string);
@@ -1169,7 +1160,7 @@ var
   i: integer;
   iElementToChange, iFile: IInterface;
 begin
-  Debug('Inside ChangeRecordIDAndAdd', 0);
+  //Debug('Inside ChangeRecordIDAndAdd', 0);
   iElementToChange := RecordByHex(iFormString);
   If Equals(GetFile(iElementToChange), PatchFile) then Exit;
   i := 0;
@@ -1192,11 +1183,11 @@ var
   OldFormID, prc: Cardinal;
   iRef: IInterface;
 begin
-  Debug('Inside of RenumberRecord', 0);
+  //Debug('Inside of RenumberRecord', 0);
   OldFormID := GetLoadOrderFormID(e);
   // change references, then change form
-  Debug('RenumberRecord: '+ Name(e) + ' '+ 'ReferenceCount: '+IntToStr(ReferencedByCount(e)),  3);
-  Debug('RenumberRecord: OldFormID: '+ IntToHex(OldFormID, 8) + '  NewFormID:'+ IntToHex(NewFormID, 8), 3);
+  //Debug('RenumberRecord: '+ Name(e) + ' '+ 'ReferenceCount: '+IntToStr(ReferencedByCount(e)),  3);
+  //Debug('RenumberRecord: OldFormID: '+ IntToHex(OldFormID, 8) + '  NewFormID:'+ IntToHex(NewFormID, 8), 3);
 
   for prc := ReferencedByCount(e)-1 downto 0 do begin
     if ReferencedByCount(e) = 0 then break;
@@ -1232,7 +1223,7 @@ begin
   slLocalForms := TStringList.Create;
   slLocalForms.Sorted := true;
   slGrandTotalForms := TStringList.Create;
-  slGrandTotalForms.Sorted := true;
+  slGrandTotalForms.Sorted := false;
   slGrandTotalForms.CaseSensitive := false;
   slCurrPass := TStringList.Create;
   slCurrPass.Sorted := true;
@@ -1259,7 +1250,7 @@ end;
 procedure ResetGlobals();
 begin
   slElementToXFer.Clear;
-  slElementToXFer.DelimitedText := copyGRUPS;
+  slElementToXFer.DelimitedText := copyELEMENTS;
   slCurrPass.Clear;
   slNextPass.Clear;
   slTotalElements.Clear;
@@ -1304,7 +1295,7 @@ var
   i: integer;
   iRecord: IInterface;
 begin
-  Debug('Inside GetLocalFormIDsFromFile '+GetFileName(iFile), 0);
+  //Debug('Inside GetLocalFormIDsFromFile '+GetFileName(iFile), 0);
   if ElementTypeString(iFile) <> 'etFile' then exit;
   if Pos(Lowercase(GetFileName(iFile)), bethESMs) > 0 then exit;
   for i := 0 to Pred(RecordCount(iFile)) do begin
@@ -1427,13 +1418,11 @@ var
   i, z, g: integer;
   iGRUP, iElement: IInterface;
 begin
-  Debug('Removing Masters: ', 3);
+  //Debug('Removing Masters: ', 3);
   iGRUP := GroupBySignature(PatchFile, 'NPC_');
-  AddMessage('SLMasters: '+ slNewMasters.CommaText);
   for z := 0 to Pred(ElementCount(iGRUP)) do begin
     iElement := ElementByIndex(iGRUP, z);
     iElement := MasterOrSelf(iElement);
-    AddMessage('Names: '+Name(iElement));
     g := slNewMasters.IndexOf(GetFileName(GetFile(iElement)));
     if g > (-1) then slNewMasters.Delete(g); 
   end;
@@ -1519,7 +1508,7 @@ begin
       bQuit := true;
       Exit;
     end;
-    BuildRef(PatchFile);
+    //BuildRef(PatchFile);
     if CheckFileName(fileNameString) then Exit;
     ini := TMemIniFile.Create(DataPath+'npcvt_Config.ini');
     ini.WriteString('GENERAL', 'sMOPath', moPath);
@@ -1545,8 +1534,8 @@ begin
       if IsDataFolderLoaded(moPath) then begin
         MessageDlg('VNPC ERROR: '+moDataFolder+' is active in mod organizer.'#13#13'Please deactivate '+moDataFolder+' in mod organizer then run this script again.',mtError, [mbOk], 0);
         AddMessage(moDataFolder+' is still active in mod organizer.  Please deactivate that folder and run the patch again');
-        //bQuit := true;
-        //Exit;
+        bQuit := true;
+        Exit;
       end;
       moButton := MessageDlg('NPC Visual Transfer Reminder: '#13#13'1: Is '+moDataFolder+' below all NPC-related ModFolders?'#13#13'2: Is '+fileNameString+' below all NPC-related mods in your loadorder?', mtConfirmation, [mbYes, mbNo], 0);
     end;
@@ -1573,7 +1562,7 @@ begin
           Exit;
       end 
       else begin
-        BuildRef(PatchFile);
+        //BuildRef(PatchFile);
         fileNameString := GetFileName(PatchFile);
         if CheckFileName(fileNameString) then Exit;
         ini := TMemIniFile.Create(DataPath+'npcvt_Config.ini');
